@@ -1,8 +1,6 @@
 import { NavBar } from "./NavBar";
 import background from "../../../public/pictures/blackhole_bg.jpg"
 import Image from "next/image";
-import { UserButton } from "@civic/auth/react";
-import { ThreeDCardDemo } from "./ThreeDCard";
 
 export const Landing = () => {
     return (
