@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: 'black';
+  src: url("../../public//fonts/Neue\ Plak\ Extended\ Black.ttf");
+}
+
+@font-face {
+  font-family: 'bold';
+  src: url("../../public//fonts/Neue\ Plak\ Extended\ Bold.ttf");
+}
+
+@font-face {
+  font-family: 'light';
+  src: url("../../public//fonts/Neue\ Plak\ Extended\ Light.ttf");
+}
+
+@font-face {
+  font-family: 'regular';
+  src: url("../../public//fonts/Neue\ Plak\ Extended\ Regular.ttf");
+}
+
+@font-face {
+  font-family: 'extraBlack';
+  src: url("../../public//fonts/Neue\ Plak\ Extended\ ExtraBlack.ttf");
+}
+
+@font-face {
+  font-family: 'semiBold';
+  src: url("../../public//fonts/Neue\ Plak\ Extended\ SemiBold.ttf");
+}
+
+@font-face {
+  font-family: 'ultraLight';
+  src: url("../../public//fonts/Neue\ Plak\ Extended\ UltraLight.ttf");
+}
