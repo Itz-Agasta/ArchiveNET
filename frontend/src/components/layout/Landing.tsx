@@ -12,7 +12,7 @@ export const Landing = () => {
 
             <div className="absolute bottom-0 left-0 p-4 max-w-[40%]">
                 <div>
-                    <h1 className="font-[Black] text-white text-4xl">WORLD'S FIRST DECENTRALIZED PROTOCOL FOR LLMS</h1>
+                    <h1 className="font-[Black] text-white text-4xl">WORLD&apos;S FIRST DECENTRALIZED PROTOCOL FOR LLMS</h1>
                     <h2 className="font-[semiBold] text-white text-md mt-5">Introducing the world&apos;s first decentralized protocol for Agentic Models — a trustless, scalable framework that lets AI agents access, store, and manage context securely across networks. Built for interoperability, privacy, and permanence, it redefines how large language models collaborate and learn over time.</h2>
                 </div>
             </div>
