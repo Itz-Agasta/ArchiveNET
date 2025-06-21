@@ -13,6 +13,5 @@ export const config = {
      * - dashboard routes
      */
     '/((?!_next|favicon.ico|sitemap.xml|robots.txt|dashboard|.*\.jpg|.*\.png|.*\.svg|.*\.gif).*)',
-    '/dashboard'
   ],
 }

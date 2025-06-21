@@ -250,21 +250,18 @@ export const NavbarLogo = () => {
 
 export const NavbarButton = ({
   href,
-  as: Tag = "a",
+  as = "a",
   children,
   className,
   variant = "primary",
   ...props
 }: {
   href?: string;
-  as?: React.ElementType;
+  as?: "a" | "button";
   children: React.ReactNode;
   className?: string;
   variant?: "primary" | "secondary" | "dark" | "gradient";
-} & (
-    | React.ComponentPropsWithoutRef<"a">
-    | React.ComponentPropsWithoutRef<"button">
-  )) => {
+} & React.HTMLAttributes<HTMLElement>) => {
   const baseStyles =
     "px-4 py-2 rounded-md bg-white button bg-white text-black text-sm font-bold relative cursor-pointer hover:-translate-y-0.5 transition duration-200 inline-block text-center font-[semiBold]";
 
@@ -277,13 +274,26 @@ export const NavbarButton = ({
       "bg-gradient-to-b from-blue-500 to-blue-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]",
   };
 
+  const combinedClassName = cn(baseStyles, variantStyles[variant], className);
+
+  if (as === "button") {
+    return (
+      <button
+        className={combinedClassName}
+        {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
+      >
+        {children}
+      </button>
+    );
+  }
+
   return (
-    <Tag
-      href={href || undefined}
-      className={cn(baseStyles, variantStyles[variant], className)}
-      {...props}
+    <a
+      href={href}
+      className={combinedClassName}
+      {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
     >
       {children}
-    </Tag>
+    </a>
   );
 };
