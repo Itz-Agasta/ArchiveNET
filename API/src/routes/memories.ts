@@ -4,6 +4,7 @@ import { createMemorySchema, searchMemorySchema } from "../schemas/memory.js";
 import { EizenService } from "../services/EizenService.js";
 import { MemoryService } from "../services/MemoryService.js";
 import { errorResponse, successResponse } from "../utils/responses.js";
+import { verifyContractHashMiddleware } from "../middlewares/contract.js";
 
 //  User-facing semantic memory API
 
@@ -11,7 +12,7 @@ const router = Router();
 
 // TODO: Replace this with actual user lookup from SQL database
 // This will be implemented when payment gateway integration is added
-async function getUserMemoryService(req: Request): Promise<MemoryService> {
+async function getUserMemoryService(req: Request): Promise<MemoryService | void> {
 	// TODO: Extract API key from request headers
 	// const apiKey = req.headers['x-api-key'] as string;
 
@@ -19,14 +20,13 @@ async function getUserMemoryService(req: Request): Promise<MemoryService> {
 	// const user = await getUserByApiKey(apiKey);
 	// const eizenService = await EizenService.forContract(user.contractId);
 	// return new MemoryService(eizenService);
-
+    
 	// For now, use environment variable as fallback (single tenant mode)
-	const contractId = process.env.EIZEN_CONTRACT_ID;
-	if (!contractId) {
-		throw new Error(
-			"No contract ID available. Please implement user lookup or set EIZEN_CONTRACT_ID",
-		);
-	}
+    if(!req.contract || !req.contract?.contractId) {
+		console.error("No contract found in request");
+        return;
+    }
+    const contractId = req.contract.contractId;
 
 	const eizenService = await EizenService.forContract(contractId);
 	return new MemoryService(eizenService);
@@ -49,9 +49,20 @@ async function getUserMemoryService(req: Request): Promise<MemoryService> {
  *   }
  * }
  */
-router.post("/insert", validateData(createMemorySchema), async (req, res) => {
+router.post("/insert", verifyContractHashMiddleware, validateData(createMemorySchema), async (req, res) => {
 	try {
 		const memoryService = await getUserMemoryService(req);
+		if (!memoryService) {
+			res
+				.status(500)
+				.json(
+					errorResponse(
+						"Memory service not available",
+						"Unable to initialize memory service",
+					),
+				);
+			return;
+		}
 		const result = await memoryService.createMemory(req.body);
 
 		res
@@ -80,7 +91,7 @@ router.post("/insert", validateData(createMemorySchema), async (req, res) => {
  * - k: Number of results (optional, default 10)
  * - filters: Optional JSON string with search filters
  */
-router.get("/search", async (req: Request, res: Response): Promise<void> => {
+router.get("/search", verifyContractHashMiddleware, async (req: Request, res: Response): Promise<void> => {
 	try {
 		const { query, k, filters } = req.query;
 
@@ -107,6 +118,17 @@ router.get("/search", async (req: Request, res: Response): Promise<void> => {
 		const validatedRequest = searchMemorySchema.parse(searchRequest);
 
 		const memoryService = await getUserMemoryService(req);
+		if (!memoryService) {
+			res
+				.status(500)
+				.json(
+					errorResponse(
+						"Memory service not available",
+						"Unable to initialize memory service",
+					),
+				);
+			return;
+		}
 		const results = await memoryService.searchMemories(validatedRequest);
 
 		res.json(
@@ -153,9 +175,20 @@ router.get("/search", async (req: Request, res: Response): Promise<void> => {
  *   }
  * }
  */
-router.post("/search", validateData(searchMemorySchema), async (req, res) => {
+router.post("/search", verifyContractHashMiddleware, validateData(searchMemorySchema), async (req, res) => {
 	try {
 		const memoryService = await getUserMemoryService(req);
+		if (!memoryService) {
+			res
+				.status(500)
+				.json(
+					errorResponse(
+						"Memory service not available",
+						"Unable to initialize memory service",
+					),
+				);
+			return;
+		}
 		const results = await memoryService.searchMemories(req.body);
 
 		res.json(
@@ -180,9 +213,21 @@ router.post("/search", validateData(searchMemorySchema), async (req, res) => {
  */
 router.get(
 	"/search/:id",
+	verifyContractHashMiddleware,
 	async (req: Request, res: Response): Promise<void> => {
 		try {
 			const memoryService = await getUserMemoryService(req);
+			if (!memoryService) {
+				res
+					.status(500)
+					.json(
+						errorResponse(
+							"Memory service not available",
+							"Unable to initialize memory service",
+						),
+					);
+				return;
+			}
 			const memoryId = Number.parseInt(req.params.id, 10);
 
 			if (Number.isNaN(memoryId)) {
@@ -227,9 +272,20 @@ router.get(
  * GET /memories
  * Get memory statistics and database info
  */
-router.get("/", async (req, res) => {
+router.get("/", verifyContractHashMiddleware, async (req, res) => {
 	try {
 		const memoryService = await getUserMemoryService(req);
+		if (!memoryService) {
+			res
+				.status(500)
+				.json(
+					errorResponse(
+						"Memory service not available",
+						"Unable to initialize memory service",
+					),
+				);
+			return;
+		}
 		const stats = await memoryService.getStats();
 
 		res.json(successResponse(stats, "Memory statistics retrieved"));
