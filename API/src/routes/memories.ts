@@ -20,13 +20,14 @@ async function getUserMemoryService(req: Request): Promise<MemoryService | void>
 	// const user = await getUserByApiKey(apiKey);
 	// const eizenService = await EizenService.forContract(user.contractId);
 	// return new MemoryService(eizenService);
-    
+
 	// For now, use environment variable as fallback (single tenant mode)
-    if(!req.contract || !req.contract?.contractId) {
-		console.error("No contract found in request");
-        return;
-    }
-    const contractId = req.contract.contractId;
+	const contract = req.contract;
+	const contractId = contract?.contractId;
+	if (!contractId) {
+		console.error("No contract ID found in request");
+		return;
+	}
 
 	const eizenService = await EizenService.forContract(contractId);
 	return new MemoryService(eizenService);
@@ -240,6 +241,17 @@ router.get(
 			}
 
 			const memory = await memoryService.getMemory(memoryId);
+			if (!memory) {
+				res
+					.status(404)
+					.json(
+						errorResponse(
+							"Memory not found",
+							`No memory found with ID: ${memoryId}`,
+						),
+					);
+				return;
+			}
 
 			if (!memory) {
 				res

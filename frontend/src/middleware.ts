@@ -1,17 +1,12 @@
-import { authMiddleware } from '@civic/auth/nextjs/middleware'
+import { clerkMiddleware } from '@clerk/nextjs/server';
 
-export default authMiddleware();
+export default clerkMiddleware();
 
 export const config = {
-  // include the paths you wish to secure here
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next directory (Next.js static files)
-     * - favicon.ico, sitemap.xml, robots.txt
-     * - image files
-     * - dashboard routes
-     */
-    '/((?!_next|favicon.ico|sitemap.xml|robots.txt|dashboard|.*\.jpg|.*\.png|.*\.svg|.*\.gif).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
-}
+};

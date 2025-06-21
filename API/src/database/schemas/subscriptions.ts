@@ -4,7 +4,7 @@ import { relations } from "drizzle-orm";
 
 export const userSubscriptionTable = pgTable("user_subscriptions", {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id").notNull(),
+    clerkUserId: text("clerk_user_id").notNull(),
     plan: text("subscription_plans", { enum: ['basic', 'pro', 'enterprise'] }).notNull(),
     quotaLimit: integer("quota_limit").notNull(),
     quotaUsed: integer("quota_used").notNull().default(0),
@@ -15,7 +15,7 @@ export const userSubscriptionTable = pgTable("user_subscriptions", {
 
 export const userSubscriptionRelations = relations(userSubscriptionTable, ({ one }) => ({
     user: one(userTable, {
-        fields: [userSubscriptionTable.userId],
-        references: [userTable.id]
+        fields: [userSubscriptionTable.clerkUserId],
+        references: [userTable.clerkId]
     })
 }));

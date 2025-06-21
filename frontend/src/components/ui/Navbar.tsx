@@ -1,17 +1,14 @@
 "use client";
-import { useUser } from "@civic/auth/react";
-import { useCallback, useState } from "react";
-import { useRouter } from "next/navigation";
+import { UserButton, useUser, SignInButton } from "@clerk/nextjs";
+import { useState } from "react";
 import { Button } from "./button";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { IconMenu2, IconX, IconUser, IconLogout } from "@tabler/icons-react";
+import { IconMenu2, IconX } from "@tabler/icons-react";
 import logo from "../../../public/icons/cropped_logo.jpeg";
 
 export default function Navbar() {
-    const { signIn, user, signOut } = useUser();
-    const router = useRouter();
+    const { isSignedIn } = useUser();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [visible, setVisible] = useState(true);
     const { scrollY } = useScroll();
 
@@ -25,30 +22,6 @@ export default function Navbar() {
             }
         }
     });
-
-    const doSignIn = useCallback(() => {
-        console.log("[Navbar] Starting sign-in process");
-        signIn()
-            .then(() => {
-                console.log("[Navbar] Sign in completed successfully");
-                router.push("/dashboard");
-            })
-            .catch((error) => {
-                console.error("[Navbar] Sign in failed:", error);
-            });
-    }, [signIn, router]);
-
-    const doSignOut = useCallback(() => {
-        console.log("[Navbar] Starting sign-out process");
-        signOut()
-            .then(() => {
-                console.log("[Navbar] Sign out completed successfully");
-                router.push("/");
-            })
-            .catch((error) => {
-                console.error("[Navbar] Sign out failed:", error);
-            });
-    }, [signOut, router]);
 
     return (
         <motion.div
@@ -79,62 +52,17 @@ export default function Navbar() {
 
                     {/* User Authentication */}
                     <div className="flex items-center space-x-4">
-                        {user ? (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors duration-200"
-                                >
-                                    <IconUser className="h-4 w-4 text-white" />
-                                    <span className="text-white text-sm font-medium hidden sm:block">
-                                        {user.name || "User"}
-                                    </span>
-                                </button>
-
-                                {/* User Dropdown Menu */}
-                                {isUserMenuOpen && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.95 }}
-                                        className="absolute right-0 mt-2 w-48 bg-black/90 backdrop-blur-md rounded-lg shadow-lg border border-white/10 py-2"
-                                    >
-                                        <div className="px-4 py-2 border-b border-white/10">
-                                            <p className="text-sm text-gray-300">Signed in as</p>
-                                            <p className="text-sm font-medium text-white truncate">
-                                                {user.email || user.name}
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                router.push("/dashboard");
-                                                setIsUserMenuOpen(false);
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors duration-200"
-                                        >
-                                            Dashboard
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                doSignOut();
-                                                setIsUserMenuOpen(false);
-                                            }}
-                                            className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors duration-200 flex items-center space-x-2"
-                                        >
-                                            <IconLogout className="h-4 w-4" />
-                                            <span>Sign out</span>
-                                        </button>
-                                    </motion.div>
-                                )}
-                            </div>
+                        {isSignedIn ? (
+                            <UserButton />
                         ) : (
-                            <Button
-                                variant="default"
-                                onClick={doSignIn}
-                                className="p-2 text-black bg-white rounded-lg text-sm font-[bold]"
-                            >
-                                Sign In
-                            </Button>
+                            <SignInButton>
+                                <Button
+                                    variant="default"
+                                    className="p-2 text-black bg-white rounded-lg text-sm font-[bold]"
+                                >
+                                    Sign In
+                                </Button>
+                            </SignInButton>
                         )}
 
                         {/* Mobile Menu Button */}
@@ -161,14 +89,16 @@ export default function Navbar() {
                     >
                         <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-4 space-y-3">
 
-                            {!user && (
-                                <Button
-                                    variant="default"
-                                    onClick={() => { doSignIn; setIsMobileMenuOpen(false); }}
-                                    className="p-2 text-black bg-white rounded-2xl"
-                                >
-                                    Sign In
-                                </Button>
+                            {!isSignedIn && (
+                                <SignInButton>
+                                    <Button
+                                        variant="default"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="p-2 text-black bg-white rounded-2xl"
+                                    >
+                                        Sign In
+                                    </Button>
+                                </SignInButton>
                             )}
                         </div>
                     </motion.div>

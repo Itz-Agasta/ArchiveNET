@@ -7,6 +7,7 @@ export const userTable = pgTable('users', {
     username: text('username').notNull().unique(),
     email: text('email').notNull().unique(),
     fullName: text('full_name').notNull(), 
+    clerkId: text('clerk_id').notNull().unique(), // Unique Clerk user ID
     metaMaskWalletAddress: text('meta_mask_wallet_address'), // Unique MetaMask wallet address
     status: text('user_status', {enum: ['active', 'suspended', 'deleted']}), // User status with column name and default
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

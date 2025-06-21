@@ -51,9 +51,10 @@ initializeServices()
 		const memoryRoutes = await import("./routes/memories.js");
 		const adminRoutes = await import("./routes/admin.js");
 		const deploymentRoutes = await import("./routes/deployment.js");
-		const instanceRoutes = await import("./routes/instances.js");
-		const userRoutes = await import("./routes/user.js");
-		const subscriptionRoutes = await import("./routes/subscriptions.js");
+		const { instanceRouter } = await import("./routes/instanceRouter.js");
+		const { userRouter } = await import("./routes/user.js");
+		const { userSubscriptionsRouter } = await import("./routes/userSubscriptions.js");
+		const { webhook } = await import("./routes/webhook.js");
 
 		const app = express();
 		const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -103,9 +104,10 @@ initializeServices()
 		app.use("/admin", adminRoutes.default); // Admin-only vector database operations
 		app.use("/memories", memoryRoutes.default); // User-facing semantic memory API
 		app.use("/deploy", deploymentRoutes.default); // Smart contract deployment
-		app.use("/instances", instanceRoutes.default); // User instance management
-		app.use("/users", userRoutes.default); // User management and authentication
-		app.use("/subscriptions", subscriptionRoutes.default); // User subscription management
+		app.use("/instances", instanceRouter); // User instance management
+		app.use("/users", userRouter); // User management and authentication
+		app.use("/subscriptions", userSubscriptionsRouter); // User subscription management
+		app.use("/webhook", webhook); // Webhook endpoints for payment and deployment
 
 		// Global error handling middleware (must be last)
 		app.use(errorHandler);

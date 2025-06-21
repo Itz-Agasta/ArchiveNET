@@ -1,9 +1,10 @@
 import { type Request, type Response, Router } from "express";
 import { EizenService } from "../services/EizenService.js";
 import { errorResponse, successResponse } from "../utils/responses.js";
+import { getUserSubscription } from "../database/models/UserSubscription.js";
+import { getInstanceByUserId, updateInstanceKeyHash } from "../database/models/instances.js";
 import { generateContractHash } from "../utils/contract.js";
-import { updateInstanceKeyHash } from "../database/models/instances.js";
-import { getUserSubscription } from "../database/models/userSubscriptions.js";
+import { auth } from "../middlewares/auth.js";
 
 //Payment webhook contract deployment
 
@@ -33,35 +34,59 @@ const router = Router();
  * TODO: Add logging for deployment tracking
  * TODO: Consider adding deployment status tracking in DB (idk, try it if y can)
  */
-router.post("/contract", async (req: Request, res: Response) => {
+router.post("/contract", auth, async (req: Request, res: Response) => {
 	try {
+		const userId = req.userId; // Get user ID from request body or auth middleware
+		if(!userId) {
+			res.status(400).json({
+				message: "User ID is required for contract deployment"
+			   });
+   		   return;
+		}
+
+		// only verify subscription as payment is already verified when creating subscription
+		const user_subscription = await getUserSubscription(userId);
+		if(!user_subscription) {
+   			res.status(400).json({
+ 				message: "User subscription not found"})
+			return;
+		}
+		const subscriptionTier = user_subscription.plan;
+		  if(!subscriptionTier) {
+	  		res.status(400).json({
+	 			message: "User subscription tier not found"});
+			return;
+		}
+
+		//Check if a contract already exists for the user
+		const existingInstance = await getInstanceByUserId(userId);
+		if(!existingInstance) {
+			res.status(400).json({
+				message: "existing instance not found for user"
+				});
+			return;
+		}
+		if(existingInstance.instanceKeyHash !== "") {
+			res.status(400).json({
+				message: "Contract already exists for user"
+				});
+			return;
+		}
+
 		// Deploy new Eizen contract on Arweave
-        const userId = req.body.userId; // Extract user ID from request body
-
-        if (!userId) {
-            res.status(400).json({
-                message: "User ID is required for contract deployment",
-            });
-            return;
-        }
-        const subscription = await getUserSubscription(userId);
-        if (!subscription) {
-            res.status(404).json({
-                message: "User subscription not found",
-            });
-            return;
-        }
-        if (!subscription.isActive) {
-            res.status(403).json({
-                message: "User subscription is not active",
-            });
-            return;
-        }
-
 		const deployResult = await EizenService.deployNewContract();
 		const contractTxId = deployResult.contractId;
+		if(!contractTxId) {
+			res.status(500).json({
+				message: "Failed to deploy contract on Arweave"
+				});
+			return;
+  		}
+		
+		// TODO: Log deployment for audit trail
+		console.log(`Contract deployed for user ${userId}: ${contractTxId}`);
 
-        const contractHash = generateContractHash(contractTxId, userId);
+		const contractHash = generateContractHash(contractTxId, userId);
 		if(!contractHash) {
 			res.status(500).json({
 				message: "Failed to generate contract hash"
@@ -71,25 +96,23 @@ router.post("/contract", async (req: Request, res: Response) => {
 		const contractHashFingerprint = contractHash.contractHashFingerprint;
 		const hashedContractKey = contractHash.hashedContractKey;
 
-        const updatedInstance = await updateInstanceKeyHash(userId, hashedContractKey);
-        if (!updatedInstance) {
-            res.status(500).json({
-                message: "Failed to update instance with contract key hash",
-            });
-            return;
-        };
+		//Store contract hash in database, provide contract id and hash-fingerprint to user
+		//Verify contract ownership by the hash-fingerprint
 
-		// TODO: Log deployment for audit trail
-		// console.log(`Contract deployed for user ${userId}: ${contractTxId}`);
+		// Update user's instance with the new contract hash
+		const update_contract_hash = await updateInstanceKeyHash(userId, hashedContractKey);
+		if(!update_contract_hash)
+			console.error(`Failed to update contract TX ID for user ${userId}`);
+		else 
+			console.log(`Updated contract TX ID for user ${userId}`);
 
 		res.status(201).json(
 			successResponse(
 				{
-					instanceKey: contractHashFingerprint,
-                    contractTxId,
-					// TODO: Add additional deployment metadata
-					// deployedAt: new Date().toISOString(),
-					// userId: userId
+					contractTxId,
+					contractHashFingerprint,
+					userId,
+					deployedAt: new Date().toISOString(),
 				},
 				"Eizen contract deployed successfully",
 			),
@@ -117,7 +140,8 @@ router.post("/contract", async (req: Request, res: Response) => {
 				),
 			);
 	}
-});
+	}
+);
 
 /**
  * GET /deploy/status/:contractId

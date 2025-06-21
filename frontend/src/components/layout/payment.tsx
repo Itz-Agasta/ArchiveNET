@@ -11,8 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getEthPrice, convertUsdToEth, formatEthAmount } from "@/lib/getCryptoPrice";
 import { useRouter } from "next/navigation";
-import { createSubscription } from "@/lib/api";
-import { useUser } from "@civic/auth/react";
+import { useAuth } from "@clerk/nextjs";
+import { hitPaymentWebhook } from "@/lib/api";
 
 interface SubscriptionPlan {
     id: string;
@@ -45,7 +45,6 @@ const subscriptionPlans: SubscriptionPlan[] = [
 ];
 
 export function Web3Payment() {
-
     const { isConnected, address } = useAccount();
     const searchParams = useSearchParams();
     const [ethPrice, setEthPrice] = useState<number | null>(null);
@@ -54,40 +53,9 @@ export function Web3Payment() {
     const [countdown, setCountdown] = useState(60); // 60 seconds countdown
     const router = useRouter();
 
-    const { user } = useUser();
+    const { getToken } = useAuth();
 
     const RECIPIENT_ADDRESS = process.env.NEXT_PUBLIC_SERVICE_WALLET_ADDRESS;
-
-    const fetchPrice = async () => {
-        setIsLoadingPrice(true);
-        const price = await getEthPrice();
-        setEthPrice(price);
-        setIsLoadingPrice(false);
-    };
-
-    async function OnPaymentComplete() {
-        console.log("Payment complete!");
-        if (!sendTxData) {
-            console.error("No token or transaction data available");
-            return;
-        }
-        else if (!isTxSuccess) {
-            console.error("Transaction not successful");
-            return;
-        }
-        if (!user || !user.id || !user.email || user.name || !user.username || !selectedPlan) {
-            console.error("No subscription plan selected");
-            return;
-        }
-        await createSubscription(
-            user.username,
-            selectedPlan.id,
-            user.name || user.username,
-            user.email,
-            sendTxData);
-        router.push(`/payments/success?txHash=${sendTxData}`);
-    };
-
 
     // Get subscription from URL params
     useEffect(() => {
@@ -102,6 +70,35 @@ export function Web3Payment() {
             setSelectedPlan(subscriptionPlans[0]);
         }
     }, [searchParams]);
+
+    const fetchPrice = async () => {
+        setIsLoadingPrice(true);
+        const price = await getEthPrice();
+        setEthPrice(price);
+        setIsLoadingPrice(false);
+    };
+
+    async function OnPaymentComplete() {
+        const token = await getToken();
+        console.log("Payment complete!");
+
+        if (!sendTxData) {
+            console.error("No transaction data available");
+            return;
+        }
+
+        if (!isTxSuccess) {
+            console.error("Transaction not successful");
+            return;
+        }
+        if (!token) {
+            console.error("Token is not available, user might not be signed in");
+            return;
+        }
+
+        await hitPaymentWebhook(token, sendTxData, selectedPlan?.id || "", 1000);
+        router.push(`/payments/success?txHash=${sendTxData}`);
+    };
 
     useEffect(() => {
         let countdown = 60;
@@ -162,7 +159,7 @@ export function Web3Payment() {
         <div className="max-w-4xl mx-auto p-6 space-y-8">
             {/* Payment Section */}
             {selectedPlan && (
-                <Card className="p-8 bg-gradient-to-r from-zinc-900 to-zinc-800 border border-zinc-700 text-white">
+                <Card className="p-8 bg-gradient-to-r from-zinc-900 to-zinc-800 border border-zinc-700">
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-2xl font-bold flex items-center gap-2">
