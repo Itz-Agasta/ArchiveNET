@@ -7,10 +7,12 @@ import Marquee from "./Marquee";
 import { BentoGridDemo } from "./BentoGrid";
 import { Subscriptions } from "./Subscriptions";
 import { HeroButton } from "../ui/HeroButton";
+import { useRouter } from "next/navigation";
 
 // #TODO: Make this mobile responsive
 
 export const Landing = () => {
+    const router = useRouter();
     return (
         <>
             <div className="w-full bg-black h-screen">
@@ -54,7 +56,7 @@ export const Landing = () => {
                 <Subscriptions />
             </div>
             <div className="dark">
-                <HeroButton />
+                <HeroButton onClick={() => router.push('/get-started')} />
             </div>
         </>
     )

@@ -1,6 +1,9 @@
 import { type Request, type Response, Router } from "express";
 import { EizenService } from "../services/EizenService.js";
 import { errorResponse, successResponse } from "../utils/responses.js";
+import { generateContractHash } from "../utils/contract.js";
+import { updateInstanceKeyHash } from "../database/models/instances.js";
+import { getUserSubscription } from "../database/models/userSubscriptions.js";
 
 //Payment webhook contract deployment
 
@@ -32,15 +35,49 @@ const router = Router();
  */
 router.post("/contract", async (req: Request, res: Response) => {
 	try {
-		// TODO: Extract user information from webhook payload
-		// const { userId, userEmail, subscriptionTier } = req.body;
-
-		// TODO: Validate that user has valid payment/subscription
-		// const subscription = await validateUserSubscription(userId);
-
 		// Deploy new Eizen contract on Arweave
+        const userId = req.body.userId; // Extract user ID from request body
+
+        if (!userId) {
+            res.status(400).json({
+                message: "User ID is required for contract deployment",
+            });
+            return;
+        }
+        const subscription = await getUserSubscription(userId);
+        if (!subscription) {
+            res.status(404).json({
+                message: "User subscription not found",
+            });
+            return;
+        }
+        if (!subscription.isActive) {
+            res.status(403).json({
+                message: "User subscription is not active",
+            });
+            return;
+        }
+
 		const deployResult = await EizenService.deployNewContract();
 		const contractTxId = deployResult.contractId;
+
+        const contractHash = generateContractHash(contractTxId, userId);
+		if(!contractHash) {
+			res.status(500).json({
+				message: "Failed to generate contract hash"
+				});
+			return;
+		}
+		const contractHashFingerprint = contractHash.contractHashFingerprint;
+		const hashedContractKey = contractHash.hashedContractKey;
+
+        const updatedInstance = await updateInstanceKeyHash(userId, hashedContractKey);
+        if (!updatedInstance) {
+            res.status(500).json({
+                message: "Failed to update instance with contract key hash",
+            });
+            return;
+        };
 
 		// TODO: Log deployment for audit trail
 		// console.log(`Contract deployed for user ${userId}: ${contractTxId}`);
@@ -48,7 +85,8 @@ router.post("/contract", async (req: Request, res: Response) => {
 		res.status(201).json(
 			successResponse(
 				{
-					contractTxId,
+					instanceKey: contractHashFingerprint,
+                    contractTxId,
 					// TODO: Add additional deployment metadata
 					// deployedAt: new Date().toISOString(),
 					// userId: userId

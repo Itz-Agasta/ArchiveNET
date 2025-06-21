@@ -1,10 +1,10 @@
 import { pgTable, uuid, text, timestamp, pgEnum, boolean, integer } from 'drizzle-orm/pg-core';
-import { userTable } from './user';
+import { userTable } from './user.js';
 import { relations } from 'drizzle-orm';
 
 export const instancesTable = pgTable('instances', {
     id: uuid('id').primaryKey().defaultRandom(),
-    instanceKeyHash: text('instance_key_hash').notNull(),
+    instanceKeyHash: text('instance_key_hash').notNull(), // hashedContractID
     userId: text('user_id').notNull().unique(),
     name: text('name').notNull(),
     description: text('description'),
@@ -16,5 +16,5 @@ export const instancesTable = pgTable('instances', {
 });
 
 export const instanceTableRelations = relations(instancesTable, ({ one }) => ({
-    userId: one(userTable, { fields: [instancesTable.userId], references: [userTable.clerkId]})
+    userId: one(userTable, { fields: [instancesTable.userId], references: [userTable.id]})
 }));
