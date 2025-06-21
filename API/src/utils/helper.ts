@@ -155,7 +155,7 @@ export async function checkRedisConnectivity(): Promise<{
 		return result;
 	} catch (error) {
 		const result = {
-			configured: true,
+			configured:  true,
 			connected: false,
 			status: "disconnected",
 			details: "Redis connection failed",
