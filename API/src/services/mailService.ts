@@ -1,6 +1,8 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
+import dotenv from "dotenv";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+dotenv.config();
 
 interface DeploymentSuccessData {
   userEmail: string;
@@ -11,7 +13,18 @@ interface DeploymentSuccessData {
 }
 
 export class MailService {
-  private fromEmail = process.env.FROM_EMAIL || 'rupam.golui@vyse.site';
+  private fromEmail =  process.env.EMAIL_SERVICE_USER;
+  private transporter;
+
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      service: "gmail",
+        auth: {
+            user: process.env.EMAIL_SERVICE_USER,
+            pass: process.env.EMAIL_SERVICE_PASS
+        }
+    });
+  }
 
 
   async sendDeploymentSuccess(data: DeploymentSuccessData): Promise<boolean> {
@@ -138,19 +151,14 @@ export class MailService {
         </html>
       `;
 
-      const { data: result, error } = await resend.emails.send({
+      const result = await this.transporter.sendMail({
         from: this.fromEmail,
-        to: [userEmail],
+        to: userEmail,
         subject: 'Your ArchiveNET Contract is Live! Important Access Details Inside',
         html: htmlContent,
       });
 
-      if (error) {
-        console.error('Failed to send deployment success email:', error);
-        return false;
-      }
-
-      console.log('Deployment success email sent successfully:', result?.id);
+      console.log('Deployment success email sent successfully:', result.messageId);
       return true;
     } catch (error) {
       console.error('Mail service error:', error);
