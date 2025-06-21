@@ -27,6 +27,8 @@
 	"dependencies": {
 		"heap-js": "^2.6.0",
 		"hollowdb": "^1.4.3",
-		"protobufjs": "^7.5.3"
+		"protobufjs": "^7.5.3",
+		"warp-contracts": "^1.4.45",
+		"warp-contracts-plugin-deploy": "^1.0.13"
 	}
 }
