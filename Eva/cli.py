@@ -3,25 +3,22 @@
     Commands list:
     - start: Starts the HTTP server
     - connect: Connects the agent to the MCP server
-    - list: Lists all connected agents or their statuses
+    - list: Lists the names of all or any specific agent.
 
 """
 
 import click
-import httpx
 from eva.http_proxy import server 
-from eva.utils.config import ADAPTER_MAP, ConfigManager
+from eva.utils.config import ADAPTER_MAP, ConfigManager, AgentManager
 import importlib
 import os
-import json
 
 MCP_SERVER_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "mcp_proxy"))
-ARWEAVE_URL = "http://localhost:8080"
 
-@click.command()
+@click.command("key")
 @click.argument("api_key", type=str)
 @click.option("--token", "-t", type=str, help="Bearer token for authentication")
-def key(api_key: str, token: str):
+def save_creds(api_key: str, token: str):
     """Saves user credentials to the configuration file.""" 
     config = ConfigManager(api_key=api_key, token=token)  
     try:
@@ -37,6 +34,10 @@ def key(api_key: str, token: str):
 def connect_agent(agent_name: str):
     """Connects the specified agent to the MCP server."""
     click.echo(f"Connecting agent: {agent_name}")
+    agent = AgentManager(agent_name=agent_name)
+    if agent.get_agent_status():
+        click.echo(f"Agent {agent_name} is already connected.")
+        return
     
     try:
         # Get the adapter class based on agent name
@@ -53,15 +54,10 @@ def connect_agent(agent_name: str):
         conn = adapter_class(agent_name=agent_name)
         connected = conn.configure_mcp()
         
-        entry = {
-            "agent_name": agent_name,
-            "connected": connected
-        }
-        
         if connected:
             click.echo(f"Agent {agent_name} connected successfully.")
-            with open("agent_list.json", "a") as f:
-                json.dump(entry, f, indent=4)
+            agent.add_agent(status=True)
+            agent.save_agents()
         else:
             click.echo(f"Failed to connect agent {agent_name}. Please check the agent name or permissions.")
             
@@ -71,17 +67,21 @@ def connect_agent(agent_name: str):
 
 @click.command("list")
 @click.option("--all", is_flag=True, help="List all connected agents")
-@click.option("--status", is_flag=True, help="Show status of connected agents")
-def list_agents(all: bool, status: bool):
+@click.option("--status", "agent_name",help="Show status of connected agents")
+def list_agents(all: bool, agent_name: bool):
     """Lists all connected agents or their statuses."""
+    agent = AgentManager(agent_name=agent_name.lower() if agent_name else None)
     if all:
         click.echo("Listing all connected agents...")
-        # Here you would implement the logic to list all agents
-        # Example: list_all_agents()
-    elif status:
+        agent.list_all()
+
+    elif agent_name:
         click.echo("Showing status of connected agents...")
-        # Here you would implement the logic to show status
-        # Example: show_agent_status()
+        status = agent.get_agent_status()
+        if status:
+            click.echo(f"Agent {agent_name} is connected.")
+        else:
+            click.echo(f"Agent {agent_name} is not connected.")
     else:
         click.echo("No specific option provided. Use --all or --status.")
 
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     cli.add_command(connect_agent)
     cli.add_command(list_agents)
     cli.add_command(start_server)
-    cli.add_command(key)
+    cli.add_command(save_creds)
 
     # Run the CLI
     cli()
