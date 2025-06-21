@@ -2,325 +2,368 @@ import * as $protobuf from "protobufjs";
 import Long = require("long");
 /** Namespace index_buffer. */
 export namespace index_buffer {
+	/** Properties of a LayerNode. */
+	interface ILayerNode {
+		/** LayerNode level */
+		level?: number | null;
 
-    /** Properties of a LayerNode. */
-    interface ILayerNode {
+		/** LayerNode idx */
+		idx?: number | null;
 
-        /** LayerNode level */
-        level?: (number|null);
+		/** LayerNode visible */
+		visible?: boolean | null;
 
-        /** LayerNode idx */
-        idx?: (number|null);
+		/** LayerNode neighbors */
+		neighbors?: { [k: string]: number } | null;
+	}
 
-        /** LayerNode visible */
-        visible?: (boolean|null);
+	/** Represents a LayerNode. */
+	class LayerNode implements ILayerNode {
+		/**
+		 * Constructs a new LayerNode.
+		 * @param [properties] Properties to set
+		 */
+		constructor(properties?: index_buffer.ILayerNode);
 
-        /** LayerNode neighbors */
-        neighbors?: ({ [k: string]: number }|null);
-    }
+		/** LayerNode level. */
+		public level: number;
 
-    /** Represents a LayerNode. */
-    class LayerNode implements ILayerNode {
+		/** LayerNode idx. */
+		public idx: number;
 
-        /**
-         * Constructs a new LayerNode.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: index_buffer.ILayerNode);
+		/** LayerNode visible. */
+		public visible: boolean;
 
-        /** LayerNode level. */
-        public level: number;
+		/** LayerNode neighbors. */
+		public neighbors: { [k: string]: number };
 
-        /** LayerNode idx. */
-        public idx: number;
+		/**
+		 * Creates a new LayerNode instance using the specified properties.
+		 * @param [properties] Properties to set
+		 * @returns LayerNode instance
+		 */
+		public static create(
+			properties?: index_buffer.ILayerNode,
+		): index_buffer.LayerNode;
 
-        /** LayerNode visible. */
-        public visible: boolean;
+		/**
+		 * Encodes the specified LayerNode message. Does not implicitly {@link index_buffer.LayerNode.verify|verify} messages.
+		 * @param message LayerNode message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encode(
+			message: index_buffer.ILayerNode,
+			writer?: $protobuf.Writer,
+		): $protobuf.Writer;
 
-        /** LayerNode neighbors. */
-        public neighbors: { [k: string]: number };
+		/**
+		 * Encodes the specified LayerNode message, length delimited. Does not implicitly {@link index_buffer.LayerNode.verify|verify} messages.
+		 * @param message LayerNode message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encodeDelimited(
+			message: index_buffer.ILayerNode,
+			writer?: $protobuf.Writer,
+		): $protobuf.Writer;
 
-        /**
-         * Creates a new LayerNode instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns LayerNode instance
-         */
-        public static create(properties?: index_buffer.ILayerNode): index_buffer.LayerNode;
+		/**
+		 * Decodes a LayerNode message from the specified reader or buffer.
+		 * @param reader Reader or buffer to decode from
+		 * @param [length] Message length if known beforehand
+		 * @returns LayerNode
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decode(
+			reader: $protobuf.Reader | Uint8Array,
+			length?: number,
+		): index_buffer.LayerNode;
 
-        /**
-         * Encodes the specified LayerNode message. Does not implicitly {@link index_buffer.LayerNode.verify|verify} messages.
-         * @param message LayerNode message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: index_buffer.ILayerNode, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Decodes a LayerNode message from the specified reader or buffer, length delimited.
+		 * @param reader Reader or buffer to decode from
+		 * @returns LayerNode
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decodeDelimited(
+			reader: $protobuf.Reader | Uint8Array,
+		): index_buffer.LayerNode;
 
-        /**
-         * Encodes the specified LayerNode message, length delimited. Does not implicitly {@link index_buffer.LayerNode.verify|verify} messages.
-         * @param message LayerNode message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: index_buffer.ILayerNode, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Verifies a LayerNode message.
+		 * @param message Plain object to verify
+		 * @returns `null` if valid, otherwise the reason why it is not
+		 */
+		public static verify(message: { [k: string]: any }): string | null;
 
-        /**
-         * Decodes a LayerNode message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns LayerNode
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): index_buffer.LayerNode;
+		/**
+		 * Creates a LayerNode message from a plain object. Also converts values to their respective internal types.
+		 * @param object Plain object
+		 * @returns LayerNode
+		 */
+		public static fromObject(object: {
+			[k: string]: any;
+		}): index_buffer.LayerNode;
 
-        /**
-         * Decodes a LayerNode message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns LayerNode
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): index_buffer.LayerNode;
+		/**
+		 * Creates a plain object from a LayerNode message. Also converts values to other types if specified.
+		 * @param message LayerNode
+		 * @param [options] Conversion options
+		 * @returns Plain object
+		 */
+		public static toObject(
+			message: index_buffer.LayerNode,
+			options?: $protobuf.IConversionOptions,
+		): { [k: string]: any };
 
-        /**
-         * Verifies a LayerNode message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
+		/**
+		 * Converts this LayerNode to JSON.
+		 * @returns JSON object
+		 */
+		public toJSON(): { [k: string]: any };
 
-        /**
-         * Creates a LayerNode message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns LayerNode
-         */
-        public static fromObject(object: { [k: string]: any }): index_buffer.LayerNode;
+		/**
+		 * Gets the default type url for LayerNode
+		 * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+		 * @returns The default type url
+		 */
+		public static getTypeUrl(typeUrlPrefix?: string): string;
+	}
 
-        /**
-         * Creates a plain object from a LayerNode message. Also converts values to other types if specified.
-         * @param message LayerNode
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: index_buffer.LayerNode, options?: $protobuf.IConversionOptions): { [k: string]: any };
+	/** Properties of a Point. */
+	interface IPoint {
+		/** Point idx */
+		idx?: number | null;
 
-        /**
-         * Converts this LayerNode to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
+		/** Point v */
+		v?: number[] | null;
+	}
 
-        /**
-         * Gets the default type url for LayerNode
-         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns The default type url
-         */
-        public static getTypeUrl(typeUrlPrefix?: string): string;
-    }
+	/** Represents a Point. */
+	class Point implements IPoint {
+		/**
+		 * Constructs a new Point.
+		 * @param [properties] Properties to set
+		 */
+		constructor(properties?: index_buffer.IPoint);
 
-    /** Properties of a Point. */
-    interface IPoint {
+		/** Point idx. */
+		public idx: number;
 
-        /** Point idx */
-        idx?: (number|null);
+		/** Point v. */
+		public v: number[];
 
-        /** Point v */
-        v?: (number[]|null);
-    }
+		/**
+		 * Creates a new Point instance using the specified properties.
+		 * @param [properties] Properties to set
+		 * @returns Point instance
+		 */
+		public static create(properties?: index_buffer.IPoint): index_buffer.Point;
 
-    /** Represents a Point. */
-    class Point implements IPoint {
+		/**
+		 * Encodes the specified Point message. Does not implicitly {@link index_buffer.Point.verify|verify} messages.
+		 * @param message Point message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encode(
+			message: index_buffer.IPoint,
+			writer?: $protobuf.Writer,
+		): $protobuf.Writer;
 
-        /**
-         * Constructs a new Point.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: index_buffer.IPoint);
+		/**
+		 * Encodes the specified Point message, length delimited. Does not implicitly {@link index_buffer.Point.verify|verify} messages.
+		 * @param message Point message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encodeDelimited(
+			message: index_buffer.IPoint,
+			writer?: $protobuf.Writer,
+		): $protobuf.Writer;
 
-        /** Point idx. */
-        public idx: number;
+		/**
+		 * Decodes a Point message from the specified reader or buffer.
+		 * @param reader Reader or buffer to decode from
+		 * @param [length] Message length if known beforehand
+		 * @returns Point
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decode(
+			reader: $protobuf.Reader | Uint8Array,
+			length?: number,
+		): index_buffer.Point;
 
-        /** Point v. */
-        public v: number[];
+		/**
+		 * Decodes a Point message from the specified reader or buffer, length delimited.
+		 * @param reader Reader or buffer to decode from
+		 * @returns Point
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decodeDelimited(
+			reader: $protobuf.Reader | Uint8Array,
+		): index_buffer.Point;
 
-        /**
-         * Creates a new Point instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns Point instance
-         */
-        public static create(properties?: index_buffer.IPoint): index_buffer.Point;
+		/**
+		 * Verifies a Point message.
+		 * @param message Plain object to verify
+		 * @returns `null` if valid, otherwise the reason why it is not
+		 */
+		public static verify(message: { [k: string]: any }): string | null;
 
-        /**
-         * Encodes the specified Point message. Does not implicitly {@link index_buffer.Point.verify|verify} messages.
-         * @param message Point message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: index_buffer.IPoint, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Creates a Point message from a plain object. Also converts values to their respective internal types.
+		 * @param object Plain object
+		 * @returns Point
+		 */
+		public static fromObject(object: { [k: string]: any }): index_buffer.Point;
 
-        /**
-         * Encodes the specified Point message, length delimited. Does not implicitly {@link index_buffer.Point.verify|verify} messages.
-         * @param message Point message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: index_buffer.IPoint, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Creates a plain object from a Point message. Also converts values to other types if specified.
+		 * @param message Point
+		 * @param [options] Conversion options
+		 * @returns Plain object
+		 */
+		public static toObject(
+			message: index_buffer.Point,
+			options?: $protobuf.IConversionOptions,
+		): { [k: string]: any };
 
-        /**
-         * Decodes a Point message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns Point
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): index_buffer.Point;
+		/**
+		 * Converts this Point to JSON.
+		 * @returns JSON object
+		 */
+		public toJSON(): { [k: string]: any };
 
-        /**
-         * Decodes a Point message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns Point
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): index_buffer.Point;
+		/**
+		 * Gets the default type url for Point
+		 * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+		 * @returns The default type url
+		 */
+		public static getTypeUrl(typeUrlPrefix?: string): string;
+	}
 
-        /**
-         * Verifies a Point message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
+	/** Properties of a PointQuant. */
+	interface IPointQuant {
+		/** PointQuant idx */
+		idx?: number | null;
 
-        /**
-         * Creates a Point message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns Point
-         */
-        public static fromObject(object: { [k: string]: any }): index_buffer.Point;
+		/** PointQuant v */
+		v?: number[] | null;
+	}
 
-        /**
-         * Creates a plain object from a Point message. Also converts values to other types if specified.
-         * @param message Point
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: index_buffer.Point, options?: $protobuf.IConversionOptions): { [k: string]: any };
+	/** Represents a PointQuant. */
+	class PointQuant implements IPointQuant {
+		/**
+		 * Constructs a new PointQuant.
+		 * @param [properties] Properties to set
+		 */
+		constructor(properties?: index_buffer.IPointQuant);
 
-        /**
-         * Converts this Point to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
+		/** PointQuant idx. */
+		public idx: number;
 
-        /**
-         * Gets the default type url for Point
-         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns The default type url
-         */
-        public static getTypeUrl(typeUrlPrefix?: string): string;
-    }
+		/** PointQuant v. */
+		public v: number[];
 
-    /** Properties of a PointQuant. */
-    interface IPointQuant {
+		/**
+		 * Creates a new PointQuant instance using the specified properties.
+		 * @param [properties] Properties to set
+		 * @returns PointQuant instance
+		 */
+		public static create(
+			properties?: index_buffer.IPointQuant,
+		): index_buffer.PointQuant;
 
-        /** PointQuant idx */
-        idx?: (number|null);
+		/**
+		 * Encodes the specified PointQuant message. Does not implicitly {@link index_buffer.PointQuant.verify|verify} messages.
+		 * @param message PointQuant message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encode(
+			message: index_buffer.IPointQuant,
+			writer?: $protobuf.Writer,
+		): $protobuf.Writer;
 
-        /** PointQuant v */
-        v?: (number[]|null);
-    }
+		/**
+		 * Encodes the specified PointQuant message, length delimited. Does not implicitly {@link index_buffer.PointQuant.verify|verify} messages.
+		 * @param message PointQuant message or plain object to encode
+		 * @param [writer] Writer to encode to
+		 * @returns Writer
+		 */
+		public static encodeDelimited(
+			message: index_buffer.IPointQuant,
+			writer?: $protobuf.Writer,
+		): $protobuf.Writer;
 
-    /** Represents a PointQuant. */
-    class PointQuant implements IPointQuant {
+		/**
+		 * Decodes a PointQuant message from the specified reader or buffer.
+		 * @param reader Reader or buffer to decode from
+		 * @param [length] Message length if known beforehand
+		 * @returns PointQuant
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decode(
+			reader: $protobuf.Reader | Uint8Array,
+			length?: number,
+		): index_buffer.PointQuant;
 
-        /**
-         * Constructs a new PointQuant.
-         * @param [properties] Properties to set
-         */
-        constructor(properties?: index_buffer.IPointQuant);
+		/**
+		 * Decodes a PointQuant message from the specified reader or buffer, length delimited.
+		 * @param reader Reader or buffer to decode from
+		 * @returns PointQuant
+		 * @throws {Error} If the payload is not a reader or valid buffer
+		 * @throws {$protobuf.util.ProtocolError} If required fields are missing
+		 */
+		public static decodeDelimited(
+			reader: $protobuf.Reader | Uint8Array,
+		): index_buffer.PointQuant;
 
-        /** PointQuant idx. */
-        public idx: number;
+		/**
+		 * Verifies a PointQuant message.
+		 * @param message Plain object to verify
+		 * @returns `null` if valid, otherwise the reason why it is not
+		 */
+		public static verify(message: { [k: string]: any }): string | null;
 
-        /** PointQuant v. */
-        public v: number[];
+		/**
+		 * Creates a PointQuant message from a plain object. Also converts values to their respective internal types.
+		 * @param object Plain object
+		 * @returns PointQuant
+		 */
+		public static fromObject(object: {
+			[k: string]: any;
+		}): index_buffer.PointQuant;
 
-        /**
-         * Creates a new PointQuant instance using the specified properties.
-         * @param [properties] Properties to set
-         * @returns PointQuant instance
-         */
-        public static create(properties?: index_buffer.IPointQuant): index_buffer.PointQuant;
+		/**
+		 * Creates a plain object from a PointQuant message. Also converts values to other types if specified.
+		 * @param message PointQuant
+		 * @param [options] Conversion options
+		 * @returns Plain object
+		 */
+		public static toObject(
+			message: index_buffer.PointQuant,
+			options?: $protobuf.IConversionOptions,
+		): { [k: string]: any };
 
-        /**
-         * Encodes the specified PointQuant message. Does not implicitly {@link index_buffer.PointQuant.verify|verify} messages.
-         * @param message PointQuant message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encode(message: index_buffer.IPointQuant, writer?: $protobuf.Writer): $protobuf.Writer;
+		/**
+		 * Converts this PointQuant to JSON.
+		 * @returns JSON object
+		 */
+		public toJSON(): { [k: string]: any };
 
-        /**
-         * Encodes the specified PointQuant message, length delimited. Does not implicitly {@link index_buffer.PointQuant.verify|verify} messages.
-         * @param message PointQuant message or plain object to encode
-         * @param [writer] Writer to encode to
-         * @returns Writer
-         */
-        public static encodeDelimited(message: index_buffer.IPointQuant, writer?: $protobuf.Writer): $protobuf.Writer;
-
-        /**
-         * Decodes a PointQuant message from the specified reader or buffer.
-         * @param reader Reader or buffer to decode from
-         * @param [length] Message length if known beforehand
-         * @returns PointQuant
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): index_buffer.PointQuant;
-
-        /**
-         * Decodes a PointQuant message from the specified reader or buffer, length delimited.
-         * @param reader Reader or buffer to decode from
-         * @returns PointQuant
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): index_buffer.PointQuant;
-
-        /**
-         * Verifies a PointQuant message.
-         * @param message Plain object to verify
-         * @returns `null` if valid, otherwise the reason why it is not
-         */
-        public static verify(message: { [k: string]: any }): (string|null);
-
-        /**
-         * Creates a PointQuant message from a plain object. Also converts values to their respective internal types.
-         * @param object Plain object
-         * @returns PointQuant
-         */
-        public static fromObject(object: { [k: string]: any }): index_buffer.PointQuant;
-
-        /**
-         * Creates a plain object from a PointQuant message. Also converts values to other types if specified.
-         * @param message PointQuant
-         * @param [options] Conversion options
-         * @returns Plain object
-         */
-        public static toObject(message: index_buffer.PointQuant, options?: $protobuf.IConversionOptions): { [k: string]: any };
-
-        /**
-         * Converts this PointQuant to JSON.
-         * @returns JSON object
-         */
-        public toJSON(): { [k: string]: any };
-
-        /**
-         * Gets the default type url for PointQuant
-         * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
-         * @returns The default type url
-         */
-        public static getTypeUrl(typeUrlPrefix?: string): string;
-    }
+		/**
+		 * Gets the default type url for PointQuant
+		 * @param [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+		 * @returns The default type url
+		 */
+		public static getTypeUrl(typeUrlPrefix?: string): string;
+	}
 }
