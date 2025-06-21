@@ -2,8 +2,8 @@ import json
 import os
 import platform
 
-from eva.utils.config import AGENT_CONFIG_FILENAMES
-from eva.mcp_proxy.adapters.base import BaseAdapterClass
+from xeni.utils.config import AGENT_CONFIG_FILENAMES
+from xeni.mcp_proxy.adapters.base import BaseAdapterClass
 
 class ClineAdapter(BaseAdapterClass):
     """
@@ -39,7 +39,7 @@ class ClineAdapter(BaseAdapterClass):
         print(f"Module path for MCP server: {module_path}")
         config = {
             "mcpServers": {
-                "Eva": {
+                "Xeni": {
                     "command": "uv",
                     "args": [
                         "--directory",

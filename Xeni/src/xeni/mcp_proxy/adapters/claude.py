@@ -2,8 +2,8 @@
 import json 
 import os
 
-from eva.utils.file_manager import ConfigFinder
-from eva.mcp_proxy.adapters.base import BaseAdapterClass
+from xeni.utils.file_manager import ConfigFinder
+from xeni.mcp_proxy.adapters.base import BaseAdapterClass
 
 class ClaudeAdapter(BaseAdapterClass):
 
@@ -24,7 +24,7 @@ class ClaudeAdapter(BaseAdapterClass):
         if config_path: 
             config = {
             "mcpServers": {
-                "Eva": {
+                "Xeni": {
                     "command": "uv",
                     "args": [
                         "--directory",
