@@ -49,3 +49,8 @@ dist
 dev-wallet.json
 prod-wallet.json
 .env
+
+#xeni
+eva.egg-info/
+__pycache__
+logs
