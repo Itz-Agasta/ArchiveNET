@@ -28,6 +28,7 @@
 		"hollowdb": "^1.4.3",
 		"http-status-codes": "^2.3.0",
 		"ioredis": "^5.6.1",
+		"resend": "^4.6.0",
 		"uuid": "^11.1.0",
 		"warp-contracts": "^1.4.45",
 		"warp-contracts-plugin-deploy": "^1.0.13",
