@@ -16,9 +16,9 @@ ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"🚀 Eva server started locally in {ENVIRONMENT} mode")
+    logger.info(f"Eva server started locally in {ENVIRONMENT} mode")
     yield
-    logger.info("🛑 Shutting down Eva server...")
+    logger.info("Shutting down Eva server...")
 
 server = FastAPI(title="http-proxy server",
                   description="An http server to relay context info to the main db",
