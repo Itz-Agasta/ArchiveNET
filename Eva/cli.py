@@ -8,13 +8,29 @@
 """
 
 import click
+import httpx
 from eva.http_proxy import server 
-from eva.mcp_proxy.adapters.map import ADAPTER_MAP
+from eva.utils.config import ADAPTER_MAP, ConfigManager
 import importlib
 import os
 import json
 
 MCP_SERVER_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "mcp_proxy"))
+ARWEAVE_URL = "http://localhost:8080"
+
+@click.command()
+@click.argument("api_key", type=str)
+@click.option("--token", "-t", type=str, help="Bearer token for authentication")
+def key(api_key: str, token: str):
+    """Saves user credentials to the configuration file.""" 
+    config = ConfigManager(api_key=api_key, token=token)  
+    try:
+        click.echo("User credentials saved successfully.")
+        config.save_token()
+        config.save_api_key()
+        click.echo(f"Credentials saved to {config.config_file}")
+    except Exception as e:
+        click.echo(f"An error occurred while saving to config file: {str(e)}")
 
 @click.command("connect")
 @click.argument("agent_name", type=str)
@@ -88,6 +104,7 @@ if __name__ == "__main__":
     cli.add_command(connect_agent)
     cli.add_command(list_agents)
     cli.add_command(start_server)
+    cli.add_command(key)
 
     # Run the CLI
     cli()

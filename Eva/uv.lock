@@ -69,11 +69,11 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "click" },
-    { name = "fastapi" },
-    { name = "httpx" },
+    { name = "click", specifier = ">=8.2.1" },
+    { name = "fastapi", specifier = ">=0.115.13" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "mcp", specifier = ">=1.9.4" },
-    { name = "pydantic" },
+    { name = "pydantic", specifier = ">=2.11.7" },
 ]
 
 [[package]]
