@@ -3,6 +3,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
+html{
+  body {
+    background-color: black;
+  }
+}
+
+@theme inline {
+  --animate-move: move 5s linear infinite;
+
+  @keyframes move {
+    0% {
+      transform: translateX(-200px);
+    }
+    100% {
+      transform: translateX(200px);
+    }
+  }
+}
+
 @font-face {
   font-family: 'black';
   src: url("../../public//fonts/Neue\ Plak\ Extended\ Black.ttf");
@@ -36,4 +55,14 @@
 @font-face {
   font-family: 'ultraLight';
   src: url("../../public//fonts/Neue\ Plak\ Extended\ UltraLight.ttf");
+}
+
+.MyGradient {
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0),
+    rgba(0, 0, 0, 1) 20%,
+    rgba(0, 0, 0, 1) 80%,
+    rgba(0, 0, 0, 0)
+  );
 }
