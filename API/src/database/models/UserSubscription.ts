@@ -1,5 +1,5 @@
 import { db } from '../db.js';
-import { userSubscriptionTable } from '../schemas/userSubscriptions.js';
+import { userSubscriptionTable } from '../schemas/subscriptions.js';
 import { eq } from 'drizzle-orm';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
@@ -7,7 +7,7 @@ type UserSubscription = InferSelectModel<typeof userSubscriptionTable>;
 type NewUserSubscription = InferInsertModel<typeof userSubscriptionTable>;
 
 export async function createUserSubscription(subscriptionData: {
-    userId: string;
+    clerkUserId: string;
     plan: "basic" | "pro" | "enterprise";
     quotaLimit: number;
     quotaUsed?: number;
@@ -28,7 +28,7 @@ export async function getUserSubscription(
     userId: string,
 ): Promise<UserSubscription | undefined> {
     return await db.query.userSubscriptionTable.findFirst({
-        where: eq(userSubscriptionTable.userId, userId),
+        where: eq(userSubscriptionTable.clerkUserId, userId),
         with: {
             user: true, // Assuming you want to include user details
         },
@@ -43,11 +43,11 @@ export async function updateUserSubscription(
         .set({
             ...updates,
         })
-        .where(eq(userSubscriptionTable.userId, userId))
+        .where(eq(userSubscriptionTable.clerkUserId, userId))
         .returning();
 }
 
 export async function deleteUserSubscription(userId: string): Promise<void> {
     await db.delete(userSubscriptionTable)
-        .where(eq(userSubscriptionTable.userId, userId));
+        .where(eq(userSubscriptionTable.clerkUserId, userId));
 }

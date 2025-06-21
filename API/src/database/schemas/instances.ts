@@ -4,7 +4,7 @@ import { relations } from 'drizzle-orm';
 
 export const instancesTable = pgTable('instances', {
     id: uuid('id').primaryKey().defaultRandom(),
-    instanceKeyHash: text('instance_key_hash').notNull(), // hashedContractID
+    instanceKeyHash: text('instance_key_hash').notNull(),
     userId: text('user_id').notNull().unique(),
     name: text('name').notNull(),
     description: text('description'),
@@ -16,5 +16,5 @@ export const instancesTable = pgTable('instances', {
 });
 
 export const instanceTableRelations = relations(instancesTable, ({ one }) => ({
-    userId: one(userTable, { fields: [instancesTable.userId], references: [userTable.id]})
+    userId: one(userTable, { fields: [instancesTable.userId], references: [userTable.clerkId]})
 }));

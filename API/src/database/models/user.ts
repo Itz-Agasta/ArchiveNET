@@ -7,40 +7,38 @@ type User = InferSelectModel<typeof userTable>;
 
 export async function getUserById(userId: string): Promise<User | undefined> {
     return await db.query.userTable.findFirst({
-        where: eq(userTable.id, userId),
+        where: eq(userTable.clerkId, userId),
+    });
+}
+
+export async function getUserByClerkId(clerkId: string): Promise<User | undefined> {
+    return await db.query.userTable.findFirst({
+        where: eq(userTable.clerkId, clerkId),
     });
 }
 
 export async function createUser(
-    username: string,
-    email: string,
-    fullName: string,
-    metaMaskWalletAddress?: string,
-    status? : 'active' | 'suspended' | 'deleted'
+    userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<User | undefined> {
-    const [newUser] = await db.insert(userTable).values({
-        username,
-        email,
-        fullName,
-        metaMaskWalletAddress,
-        status: status || 'active', // Default to 'active' if not provided
+    const newUser = await db.insert(userTable).values({
+        ...userData,
         createdAt: new Date(),
         updatedAt: new Date(),
     }).returning();
 
-    return newUser;
+    return newUser[0];
 }
 
 export async function updateUser(
     userId: string,
-    status: 'active' | 'suspended' | 'deleted',
+    userData: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>
 ): Promise<User | undefined> {  
     const [updatedUser] = await db.update(userTable)
         .set({
-            status,
+            ...userData,
             updatedAt: new Date(),
         })
-        .where(eq(userTable.id, userId))
+        .where(eq(userTable.clerkId, userId))
         .returning();
 
     return updatedUser;
@@ -49,11 +47,5 @@ export async function updateUser(
 export async function deleteUser(userId: string): Promise<any> // #TODO: Replace 'any' with the actual return type
 {
     const deletedUser = await db.delete(userTable)
-        .where(eq(userTable.id, userId)).returning();
-}
-
-export async function findUserByEmail(email: string): Promise<User | undefined> {
-    return await db.query.userTable.findFirst({
-        where: eq(userTable.email, email),
-    });
+        .where(eq(userTable.clerkId, userId)).returning();
 }

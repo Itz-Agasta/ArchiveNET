@@ -1,66 +1,63 @@
-import axios from 'axios';
+import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-export const createSubscription = async (username: string, plan: string, fullName: string, email: string, txHash: string) => {
-    try {
-        const response = await axios.post(`${BASE_URL}/subscriptions/create`, {
-            username,
-            plan,
-            fullName,
-            email,
-            txHash
-        });
-        if (response.status === 201) {
-            return response.data;
-        } else {
-            throw new Error('Failed to create subscription');
-        }
-    } catch (error) {
-        console.error('Error creating subscription:', error);
-        throw error;
-    }
+export async function test(token: string) {
+  const response = await axios.get(`${API_BASE_URL}/test`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
 }
 
-export const getInstances = async (userId: string) => {
-    try {
-        const response = await axios.get(`${BASE_URL}/instances/${userId}`);
-        if (response.status === 200) {
-            return response.data.instance;
-        } else {
-            throw new Error('Failed to retrieve instance key');
-        }
-    } catch (error) {
-        console.error('Error retrieving instance key:', error);
-        throw error;
-    }
+export async function getUserSubscription(token: string) {
+  const response = await axios.get(`${API_BASE_URL}/user_subscriptions/list`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
 }
 
-export const deployContract = async (userId: string) => {
-    try{
-        const response = await axios.post(`${BASE_URL}/deploy/contract`, { userId });
-        return response.data;
-    }catch (error) {
-        console.error('Error deploying contract:', error);
-        throw error;
-    }
+export async function deployArweaveContract(token: string){
+  const response = await axios.post(`${API_BASE_URL}/deploy/contract`, {}, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  console.log(response.data);
+  return response.data;
 }
 
-export const createInstance = async (userId: string, username: string, email: string, fullName: string) => {
-    try {
-        const response = await axios.post(`${BASE_URL}/instances/create`, {
-            userId,
-            username,
-            email,
-            fullName,
-        });
-        if (response.status === 201) {
-            return response.data.instance;
-        } else {
-            throw new Error('Failed to create instance');
-        }
-    } catch (error) {
-        console.error('Error creating instance:', error);
-        throw error;
+export async function hitPaymentWebhook(token: string, txHash: string, subscriptionPlan: string, quotaLimit: number ) {
+  await axios.post(`${API_BASE_URL}/webhook/payments/web3`,{
+      txHash,
+      subscriptionPlan,
+      quotaLimit
+    }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
     }
+  });
+}
+
+export async function createNewApiKey (token: string){
+  const response = await axios.post(`${API_BASE_URL}/instances/create`, {}
+  , {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  console.log(response.data);
+  return response.data;
+}
+
+export async function getInstances(token: string) {
+  const response = await axios.get(`${API_BASE_URL}/instances/list`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  return response.data;
 }

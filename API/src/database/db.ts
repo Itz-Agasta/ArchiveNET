@@ -1,10 +1,9 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-
 import { config } from "dotenv";
 import * as schema1 from "./schemas/user.js";
 import * as schema2 from "./schemas/instances.js";
-import * as schema3 from "./schemas/userSubscriptions.js";
+import * as schema3 from "./schemas/subscriptions.js";
 
 const schema = {
     ...schema1,
