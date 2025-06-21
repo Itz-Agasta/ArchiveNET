@@ -1,9 +1,24 @@
 {
-	"name": "eizen",
+	"name": "eizendb",
 	"version": "1.0.0",
 	"description": "Vector database backend lib for ArchiveNet",
-	"main": "dist/index.js",
+	"main": "lib/index.cjs",
+	"module": "lib/index.js",
+	"types": "lib/index.d.ts",
 	"type": "module",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./lib/index.d.ts",
+				"default": "./lib/index.js"
+			},
+			"require": {
+				"types": "./lib/index.d.cts",
+				"default": "./lib/index.cjs"
+			}
+		}
+	},
+	"files": ["lib", "proto", "README.md", "package.json"],
 	"scripts": {
 		"build": "tsdown",
 		"dev": "tsx src/index.ts",
@@ -12,9 +27,26 @@
 		"proto:clean": "rm -rf proto/*.js proto/*.d.ts",
 		"proto:gen": "npm run proto:clean && npx pbjs ./proto/hnsw_comm.proto -w commonjs -t static-module -o ./proto/hnsw_comm.js && npx pbts ./proto/hnsw_comm.js -o ./proto/hnsw_comm.d.ts && npx pbjs ./proto/request.proto -w commonjs -t static-module -o ./proto/request.js && npx pbts ./proto/request.js -o ./proto/request.d.ts"
 	},
-	"keywords": [],
-	"author": "Agasta",
+	"keywords": ["vector-database",
+		"hnsw",
+		"arweave",
+		"blockchain",
+		"similarity-search",
+		"machine-learning",
+		"nearest-neighbor",
+		"embeddings",
+		"nodejs",
+		"typescript"],
+		"author": "Agasta",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Itz-Agasta/ArchiveNET/tree/main/Eizen"
+	},
+	"homepage": "https://github.com/Itz-Agasta/ArchiveNET/tree/main/Eizen#readme",
+	"bugs": {
+		"url": "https://github.com/Itz-Agasta/ArchiveNET/issues"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.0",
 		"@tsconfig/node23": "23.0.2",

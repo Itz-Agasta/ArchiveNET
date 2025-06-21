@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { EizenDbVector } from "eizen";
+import { EizenDbVector } from "eizendb";
 import { SetSDK } from "hollowdb";
 import { type ArweaveConfig, initializeArweave } from "../config/arweave.js";
 import type {
