@@ -40,8 +40,7 @@ class HealthCheck(BaseModel):
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z")
     )
-    cache_connected: bool
-    external_db_connected: bool
+    connected: bool
 
 class AgentList(BaseModel):
     agent_name: str
