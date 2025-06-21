@@ -1,10 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 import os
 import logging
 from dotenv import load_dotenv
+
+from eva.http_proxy.endpoints import insert, search, healthcheck
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -16,12 +18,12 @@ ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"Eva server started locally in {ENVIRONMENT} mode")
+    logger.info(f"Starting local Eva server.")
     yield
     logger.info("Shutting down Eva server...")
 
 server = FastAPI(title="http-proxy server",
-                  description="An http server to relay context info to the main db",
+                  description="An http server to relay context to main ArchiveNet",
                   version="0.1.0",
                   docs_url="/docs",
                   redoc_url="/redoc",
@@ -34,6 +36,10 @@ server.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+server.include_router(insert.router)
+server.include_router(search.router)
+server.include_router(healthcheck.router)
 
 def start_server(port: int = 8000, host: str = "127.0.0.1"):
     uvicorn.run(server, host=host, port=port)

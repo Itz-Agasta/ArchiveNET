@@ -1,16 +1,20 @@
 from fastapi import APIRouter
 import os
 import httpx
-from fastapi.responses import JSONResponse
+import json
 from fastapi import HTTPException
 
+from eva.utils.config import CONFIG_FILE
 from eva.utils.models import ContextQuery, ContextResponse
 
-base_url = os.getenv("BASE_URL", "http://localhost:3000/memories")
-headers = {
-    "Content-Type": "application/json"
-}
 router = APIRouter()
+base_url = os.getenv("BASE_URL", "http://localhost:3000/memories")
+headers = {}
+with open(CONFIG_FILE, 'r') as f:
+    config = json.load(f)
+    headers["Authorization"] = config.get("Authorization", "")
+    headers["x-contract-id"] = config.get("x-contract-id", "")
+    headers["Content-Type"] = "application/json"
 
 @router.post("/context/search")
 async def search_context(query: ContextQuery)-> ContextResponse:
