@@ -1,6 +1,7 @@
 """ Defines all the terminal commands to be used by the agent
     Using the click module
     Commands list:
+    - key: Saves user credentials to the configuration file
     - start: Starts the HTTP server
     - connect: Connects the agent to the MCP server
     - list: Lists the names of all or any specific agent.
@@ -8,10 +9,11 @@
 """
 
 import click
-from eva.http_proxy import server 
-from eva.utils.config import ADAPTER_MAP, ConfigManager, AgentManager
 import importlib
 import os
+
+from eva.utils.config import ADAPTER_MAP, ConfigManager, AgentManager
+from eva.http_proxy import server 
 
 MCP_SERVER_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "mcp_proxy"))
 
@@ -57,33 +59,47 @@ def connect_agent(agent_name: str):
         if connected:
             click.echo(f"Agent {agent_name} connected successfully.")
             agent.add_agent(status=True)
-            agent.save_agents()
         else:
             click.echo(f"Failed to connect agent {agent_name}. Please check the agent name or permissions.")
             
     except Exception as e:
         click.echo(f"Error connecting agent {agent_name}: {str(e)}")
-    
 
+# list command Broken to be fixed soon
 @click.command("list")
 @click.option("--all", is_flag=True, help="List all connected agents")
 @click.option("--status", "agent_name",help="Show status of connected agents")
-def list_agents(all: bool, agent_name: bool):
+def list_agents(all: bool, status: str):
     """Lists all connected agents or their statuses."""
-    agent = AgentManager(agent_name=agent_name.lower() if agent_name else None)
+
     if all:
         click.echo("Listing all connected agents...")
-        agent.list_all()
+        agent = AgentManager(agent_name="all")
+        agents_data = agent.list_all()
 
-    elif agent_name:
-        click.echo("Showing status of connected agents...")
-        status = agent.get_agent_status()
-        if status:
-            click.echo(f"Agent {agent_name} is connected.")
+        if agents_data.get("agents"):
+            for agent_info in agents_data["agents"]:
+                name = agent_info.get("name", "Unknown")
+                agent_status = agent_info.get("status", "Unknown")
+                click.echo(f"Agent: {name} - Status: {agent_status}")
         else:
-            click.echo(f"Agent {agent_name} is not connected.")
+            click.echo("No agents found.")
+
+    elif status:
+        click.echo(f"Showing status of agent '{status}'...")
+        agent_manager = AgentManager(agent_name=status.lower())
+        agent_status = agent_manager.get_agent_status()
+        
+        if agent_status:
+            click.echo(f"Agent '{status}' is connected (Status: {agent_status}).")
+        else:
+            click.echo(f"Agent '{status}' is not connected or not found.")
+    
     else:
-        click.echo("No specific option provided. Use --all or --status.")
+        click.echo("No specific option provided. Use --all or --status <agent_name>.")
+        click.echo("Examples:")
+        click.echo("  eva list --all")
+        click.echo("  eva list --status claude")
 
 @click.command("start")
 @click.option("--port", default=8000, help="Port to run the server on (default: 8000)")

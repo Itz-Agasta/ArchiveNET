@@ -96,7 +96,9 @@ class ConfigManager:
             json.dump(config, f, indent=4)
 
 class AgentManager:
-    def __init__(self, agent_name: str):
+    def __init__(self, agent_name: str = None):
+        if agent_name is None:
+            raise ValueError("agent_name cannot be None")
         self.agent_name = agent_name.lower()
         self.config_dir = CONFIG_DIR
         self.config_file = CONFIG_DIR / "agents.json"
@@ -109,7 +111,7 @@ class AgentManager:
         except (json.JSONDecodeError, FileNotFoundError):
             return {"agents": []}
 
-    def save_agents(self, agents: dict):
+    def save_agents(self, agents: str):
         """Save agents to the JSON file."""
         with open(self.config_file, 'w') as f:
             json.dump(agents, f, indent=4)
@@ -128,11 +130,11 @@ class AgentManager:
         data = self.load_agents()
 
         for agent in data["agents"]:
-            if agent["name"] == self.name:
+            if agent["name"] == self.agent_name:
                 return False  # Agent already exists
             
         new_agent = {
-            "name": self.name,
+            "name": self.agent_name,
             "status": status
         }
 
@@ -146,7 +148,7 @@ class AgentManager:
         data = self.load_agents()
 
         for agent in data["agents"]:
-            if agent["name"] == self.name:
+            if agent["name"] == self.agent_name:
                 data["agents"].remove(agent)
                 self.save_agents(data)
                 return True
@@ -158,7 +160,7 @@ class AgentManager:
         data = self.load_agents()
 
         for agent in data["agents"]:
-            if agent["name"] == self.name:
+            if agent["name"] == self.agent_name:
                 return agent.get("status", False)
         return False
 
@@ -168,7 +170,7 @@ class AgentManager:
         data = self.load_agents()
 
         for agent in data["agents"]:
-            if agent["name"] == self.name:
+            if agent["name"] == self.agent_name:
                 agent["status"] = status
                 self.save_agents(data)
                 return True
