@@ -1,7 +1,7 @@
 import os
 import platform
 
-from eva.utils.config import AGENT_CONFIG_FILENAMES
+from xeni.utils.config import AGENT_CONFIG_FILENAMES
 
 class ConfigFinder():
     def __init__(self, agentName):

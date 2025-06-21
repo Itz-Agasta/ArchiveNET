@@ -3,9 +3,9 @@ import httpx
 import sys
 from mcp.server.fastmcp import FastMCP
 
-from eva.utils.models import ContextData, ContextQuery, ContextResponse
+from xeni.utils.models import ContextData, ContextQuery, ContextResponse
 
-mcp = FastMCP("Eva")
+mcp = FastMCP("Xeni")
 
 HTTP_PROXY_URL = "http://127.0.0.1:3000" 
 
@@ -56,7 +56,7 @@ async def insert(data: ContextData) -> None:
 if __name__ == "__main__":
     # Start the MCP server
     try:
-        print("Starting Eva MCP server...", file=sys.stderr)
+        print("Starting Xeni MCP server...", file=sys.stderr)
         # Start the MCP server
         mcp.run(transport="stdio")
     except Exception as e:

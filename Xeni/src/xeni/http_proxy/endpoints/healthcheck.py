@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from eva.utils.models import HealthCheck
+from xeni.utils.models import HealthCheck
 
 router = APIRouter()
 

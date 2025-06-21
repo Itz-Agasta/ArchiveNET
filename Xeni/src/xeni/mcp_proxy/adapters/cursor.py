@@ -1,7 +1,7 @@
 import json 
 import os
 
-from eva.mcp_proxy.adapters.base import BaseAdapterClass
+from xeni.mcp_proxy.adapters.base import BaseAdapterClass
 
 class CursorAdapter(BaseAdapterClass):
 
@@ -23,7 +23,7 @@ class CursorAdapter(BaseAdapterClass):
         if config_path: 
             config = {
                 "mcpServers": {
-                    "Eva": {
+                    "Xeni": {
                         "command": "uv",
                         "args": [
                             "--directory",

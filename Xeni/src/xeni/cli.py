@@ -12,12 +12,28 @@ import click
 import importlib
 import os
 
-from eva.utils.config import ADAPTER_MAP, ConfigManager, AgentManager
-from eva.http_proxy import server 
+from xeni.utils.config import ADAPTER_MAP,EIZEN_URL, ConfigManager, AgentManager
+from xeni.http_proxy import server 
 
 MCP_SERVER_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "mcp_proxy"))
 
-@click.command("key")
+@click.group()
+def main():
+    """MCP CLI Tool"""
+    pass
+
+@main.command("set-url")
+@click.argument("url", type=str)
+def set_url(url: str):
+    """Sets the Eizen URL for the MCP server."""
+    try:
+        with open(EIZEN_URL, 'w') as f:
+            f.write(url)
+        click.echo(f"Eizen URL set to: {url}")
+    except Exception as e:
+        click.echo(f"An error occurred while setting the URL: {str(e)}")
+
+@main.command("key")
 @click.argument("api_key", type=str)
 @click.option("--token", "-t", type=str, help="Bearer token for authentication")
 def save_creds(api_key: str, token: str):
@@ -31,7 +47,7 @@ def save_creds(api_key: str, token: str):
     except Exception as e:
         click.echo(f"An error occurred while saving to config file: {str(e)}")
 
-@click.command("connect")
+@main.command("connect")
 @click.argument("agent_name", type=str)
 def connect_agent(agent_name: str):
     """Connects the specified agent to the MCP server."""
@@ -49,7 +65,7 @@ def connect_agent(agent_name: str):
             return
             
         # Import the adapter module dynamically
-        module = importlib.import_module(f"eva.mcp_proxy.adapters.{agent_name.lower()}")
+        module = importlib.import_module(f"xeni.mcp_proxy.adapters.{agent_name.lower()}")
         adapter_class = getattr(module, adapter_info)
         
         # Create adapter instance and connect
@@ -66,7 +82,7 @@ def connect_agent(agent_name: str):
         click.echo(f"Error connecting agent {agent_name}: {str(e)}")
 
 # list command Broken to be fixed soon
-@click.command("list")
+@main.command("list")
 @click.option("--all", is_flag=True, help="List all connected agents")
 @click.option("--status", "agent_name",help="Show status of connected agents")
 def list_agents(all: bool, status: str):
@@ -98,29 +114,12 @@ def list_agents(all: bool, status: str):
     else:
         click.echo("No specific option provided. Use --all or --status <agent_name>.")
         click.echo("Examples:")
-        click.echo("  eva list --all")
-        click.echo("  eva list --status claude")
+        click.echo("  xeni list --all")
+        click.echo("  xeni list --status claude")
 
-@click.command("start")
+@main.command("start")
 @click.option("--port", default=8000, help="Port to run the server on (default: 8000)")
 def start_server(port: int):
     """Starts the HTTP server for the MCP tools."""
     click.echo(f"Starting HTTP server on port {port}...")
     server.start_server(port=port)
-
-#This is a temporary entrypoint for the CLI tool
-if __name__ == "__main__":
-    # Create a Click group to combine commands
-    @click.group()
-    def cli():
-        """MCP CLI Tool"""
-        pass
-
-    # Add commands to the CLI group
-    cli.add_command(connect_agent)
-    cli.add_command(list_agents)
-    cli.add_command(start_server)
-    cli.add_command(save_creds)
-
-    # Run the CLI
-    cli()

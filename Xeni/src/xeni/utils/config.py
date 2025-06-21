@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import json
 
 AGENT_CONFIG_FILENAMES = {
@@ -15,8 +16,10 @@ ADAPTER_MAP = {
     "vscode": "VSCodeAdapter",
 }
 
-CONFIG_DIR = Path.home() / ".eva"
-CONFIG_FILE = CONFIG_DIR / "evasrc"
+CONFIG_DIR = Path.home() / ".xeni"
+CONFIG_FILE = CONFIG_DIR / "xenisrc"
+EIZEN_URL = CONFIG_DIR / "eizen_url.text"
+
 
 class ConfigManager:
     def __init__(self, api_key: str = None, token: str = None):
@@ -26,6 +29,32 @@ class ConfigManager:
         self.token = token
         self.ensure_config_dir()
 
+    def load_config_path(self):
+        """Load configuration, creating default if it doesn't exist."""
+        if not os.path.exists(CONFIG_FILE):
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+            
+            # Create default config
+            default_config = {
+                # Add your default configuration here
+                "x-contract-id": "",
+                "Authorization": "",
+                "Content-Type": "application/json",
+            }
+            
+            with open(CONFIG_FILE, 'w') as f:
+                json.dump(default_config, f, indent=2)
+            
+            print(f"Created default config file at {CONFIG_FILE}")
+            return CONFIG_FILE
+        
+        try:
+            return CONFIG_FILE # or whatever format you're using
+        except Exception as e:
+            print(f"Error reading config file: {e}")
+            return ""
+        
     def ensure_config_dir(self):
         """Ensure the configuration directory exists."""
         if not self.config_dir.exists():

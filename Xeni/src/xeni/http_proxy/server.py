@@ -6,7 +6,7 @@ import os
 import logging
 from dotenv import load_dotenv
 
-from eva.http_proxy.endpoints import insert, search, healthcheck
+from xeni.http_proxy.endpoints import insert, search, healthcheck
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -18,9 +18,9 @@ ENVIRONMENT = os.getenv("ENVIRONMENT")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"Starting local Eva server.")
+    logger.info(f"Starting local Xeni server.")
     yield
-    logger.info("Shutting down Eva server...")
+    logger.info("Shutting down Xeni server...")
 
 server = FastAPI(title="http-proxy server",
                   description="An http server to relay context to main ArchiveNet",
