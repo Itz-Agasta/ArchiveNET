@@ -27,7 +27,7 @@ export default function Paragraph({
     const element = useRef<HTMLParagraphElement>(null);
     const { scrollYProgress } = useScroll({
         target: element,
-        offset: ["start 0.6", "end 0.3"],
+        offset: ["start 0.6", "end 0.35"],
     });
 
 

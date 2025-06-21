@@ -10,9 +10,8 @@ import {
     MobileNavToggle,
     MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@civic/auth/react";
 
 
 export function NavBar() {
@@ -35,45 +34,15 @@ export function NavBar() {
 
     const router = useRouter();
 
-    const { signIn, user, signOut } = useUser();
-
-    const doSignIn = useCallback(() => {
-        console.log("[Page] Starting sign-in process");
-        signIn()
-            .then(() => {
-                if (user) {
-                    console.log(user.name, user.email, user.email);
-                    router.push("/dashboard");
-                    console.log("[Page] Sign in completed successfully");
-                }
-            })
-            .catch((error) => {
-                console.error("[Page] Sign in failed:", error);
-            });
-    }, [signIn]);
-
-    const doSignOut = useCallback(() => {
-        console.log("[Page] Starting sign-out process");
-        signOut()
-            .then(() => {
-                router.push("/");
-                console.log("[Page] Sign out completed successfully");
-            })
-            .catch((error) => {
-                console.error("[Page] Sign out failed:", error);
-            });
-    }, [signOut]);
-
     return (
-        <div className="relative w-full">
+        <div className="fixed w-full z-40">
             <Navbar>
                 {/* Desktop Navigation */}
                 <NavBody>
                     <NavbarLogo />
                     <NavItems items={navItems} className="font-[semiBold]" />
                     <div className="flex items-center gap-4">
-                        <NavbarButton variant="primary">Get Started Today</NavbarButton>
-                        <NavbarButton variant="primary">Book a call</NavbarButton>
+                        <NavbarButton variant="primary" onClick={() => router.push('/get-started')}>Get Started Today</NavbarButton>
                     </div>
                 </NavBody>
 
