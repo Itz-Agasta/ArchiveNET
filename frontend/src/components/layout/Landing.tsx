@@ -3,7 +3,6 @@ import background from "../../../public/pictures/blackhole.png"
 import Image from "next/image";
 import Paragraph from './Character';
 import Marquee from "./Marquee";
-import { BentoGrid } from "../ui/bento-grid";
 import { BentoGridDemo } from "./BentoGrid";
 import { Subscriptions } from "./Subscriptions";
 

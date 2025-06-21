@@ -73,6 +73,7 @@ export function NavBar() {
                     <NavItems items={navItems} className="font-[semiBold]" />
                     <div className="flex items-center gap-4">
                         <NavbarButton variant="primary">Get Started Today</NavbarButton>
+                        <NavbarButton variant="primary">Book a call</NavbarButton>
                     </div>
                 </NavBody>
 
