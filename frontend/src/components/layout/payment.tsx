@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getEthPrice, convertUsdToEth, formatEthAmount } from "@/lib/getCryptoPrice";
 import { useRouter } from "next/navigation";
+import { createSubscription } from "@/lib/api";
+import { useUser } from "@civic/auth/react";
 
 interface SubscriptionPlan {
     id: string;
@@ -43,6 +45,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
 ];
 
 export function Web3Payment() {
+
     const { isConnected, address } = useAccount();
     const searchParams = useSearchParams();
     const [ethPrice, setEthPrice] = useState<number | null>(null);
@@ -50,6 +53,8 @@ export function Web3Payment() {
     const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
     const [countdown, setCountdown] = useState(60); // 60 seconds countdown
     const router = useRouter();
+
+    const { user } = useUser();
 
     const RECIPIENT_ADDRESS = process.env.NEXT_PUBLIC_SERVICE_WALLET_ADDRESS;
 
@@ -70,9 +75,33 @@ export function Web3Payment() {
             console.error("Transaction not successful");
             return;
         }
-
+        if (!user || !user.id || !user.email || user.name || !user.username || !selectedPlan) {
+            console.error("No subscription plan selected");
+            return;
+        }
+        await createSubscription(
+            user.username,
+            selectedPlan.id,
+            user.name || user.username,
+            user.email,
+            sendTxData);
         router.push(`/payments/success?txHash=${sendTxData}`);
     };
+
+
+    // Get subscription from URL params
+    useEffect(() => {
+        const planId = searchParams.get("subscription");
+        if (planId) {
+            const plan = subscriptionPlans.find(p => p.id === planId);
+            if (plan) {
+                setSelectedPlan(plan);
+            }
+        } else {
+            // Default to Basic plan if no subscription specified
+            setSelectedPlan(subscriptionPlans[0]);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         let countdown = 60;
@@ -99,18 +128,6 @@ export function Web3Payment() {
             clearInterval(countdownInterval);
         };
     }, []);
-
-    useEffect(() => {
-        const subscription = searchParams.get("subscription");
-        if (subscription) {
-            const plan = subscriptionPlans.find(p => p.id === subscription.toLowerCase());
-            if (plan) {
-                setSelectedPlan(plan);
-            } else {
-                console.error("Invalid subscription plan selected");
-            }
-        }
-    }, [searchParams]);
 
 
     // Payment

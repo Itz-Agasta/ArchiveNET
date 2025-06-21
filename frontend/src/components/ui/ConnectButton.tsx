@@ -10,7 +10,7 @@ export const ConnectButton = () => {
     return (
         <div>
             {address ? (
-                <Button variant="default" size="sm" className="bg-gray-300 hover:bg-gray-400 text-red-400 cursor-pointer" onClick={() => disconnect()}>Disconnect</Button>
+                <Button variant="default" size="sm" className="bg-red-500 text-white cursor-pointer" onClick={() => disconnect()}>Disconnect</Button>
             ) : (
                 <Popover>
                     <PopoverTrigger>
@@ -18,7 +18,7 @@ export const ConnectButton = () => {
                             Connect Wallet
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="flex flex-col gap-2">
+                    <PopoverContent className="flex flex-col gap-2 bg-white">
                         {connectors ? connectors.map((connector) => (
                             <Button variant="default" size="sm" className="bg-gray-300 hover:bg-gray-400 text-black cursor-pointer" key={connector.uid} onClick={() => connect({ connector })} disabled={isPending}>
                                 {isPending ? "Connecting..." : `Connect with ${connector.name}`}
