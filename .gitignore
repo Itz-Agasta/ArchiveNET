@@ -40,7 +40,6 @@ test/*.js
 *.map
 
 # project
-.vscode/
 lib/
 env
 dist
