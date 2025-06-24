@@ -54,3 +54,6 @@ prod-wallet.json
 eva.egg-info/
 __pycache__
 logs
+
+# Extras
+.DS_Store

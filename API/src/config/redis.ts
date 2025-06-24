@@ -11,23 +11,34 @@ import { Redis } from "ioredis";
  * @throws Never throws - all errors are caught and logged as warnings
  */
 export async function initializeRedis(): Promise<Redis | undefined> {
-	if (!process.env.REDIS_URL) {
-		console.log("No REDIS_URL provided, proceeding without Redis cache");
+
+	const redisHost = process.env.REDIS_SERVER;
+	const redisPort = process.env.REDIS_PORT;
+	const redisPassword = process.env.REDIS_AUTH_KEY;
+
+	if (!redisHost || !redisPort) {
+		console.log("No Redis configuration provided, proceeding without Redis cache");
 		return undefined;
 	}
 
-	console.log("Attempting to connect to Redis.....");
+	console.log(`Attempting to connect to Redis at PORT:${redisPort}...`);
 
 	let redis: Redis | undefined;
 
 	try {
-		redis = new Redis(process.env.REDIS_URL, {
+		redis = new Redis({
+			host: redisHost,
+			port: parseInt(redisPort, 10),
+			password: redisPassword,
 			// Connection settings
 			connectTimeout: 10000,
 			commandTimeout: 5000,
 			lazyConnect: false,
 			maxRetriesPerRequest: 2,
 			enableAutoPipelining: true,
+			// Additional settings for external Redis
+			enableReadyCheck: true,
+			family: 4, // Use IPv4
 		});
 
 		// Track connection state to prevent spam
