@@ -11,24 +11,64 @@ import { Redis } from "ioredis";
  * @throws Never throws - all errors are caught and logged as warnings
  */
 export async function initializeRedis(): Promise<Redis | undefined> {
-	if (!process.env.REDIS_URL) {
-		console.log("No REDIS_URL provided, proceeding without Redis cache");
+	// Support both REDIS_URL (for production/external services) and individual config (for local/development)
+	const redisUrl = process.env.REDIS_URL;
+	const redisHost = process.env.REDIS_SERVER || process.env.REDIS_HOST || 'localhost';
+	const redisPort = process.env.REDIS_PORT || '6379';
+	const redisPassword = process.env.REDIS_AUTH_KEY || process.env.REDIS_PASSWORD;
+
+	// If no Redis configuration is provided, skip Redis entirely
+	if (!redisUrl && !redisHost) {
+		console.log("No Redis configuration provided, proceeding without Redis cache");
 		return undefined;
 	}
 
-	console.log("Attempting to connect to Redis.....");
+	// Determine connection method and log appropriately
+	if (redisUrl) {
+		console.log(`Attempting to connect to Redis via URL: ${redisUrl.replace(/\/\/.*@/, '//*****@')}...`);
+	} else {
+		const isLocal = redisHost === 'localhost' || redisHost === '127.0.0.1';
+		console.log(`Attempting to connect to ${isLocal ? 'LOCAL' : 'REMOTE'} Redis at ${redisHost}:${redisPort}...`);
+	}
 
 	let redis: Redis | undefined;
 
 	try {
-		redis = new Redis(process.env.REDIS_URL, {
-			// Connection settings
-			connectTimeout: 10000,
-			commandTimeout: 5000,
-			lazyConnect: false,
-			maxRetriesPerRequest: 2,
-			enableAutoPipelining: true,
-		});
+		// Create Redis connection - support both URL and individual config
+		if (redisUrl) {
+			// Use Redis URL (common for cloud services like Railway, Heroku, etc.)
+			redis = new Redis(redisUrl, {
+				connectTimeout: 10000,
+				commandTimeout: 5000,
+				lazyConnect: false,
+				maxRetriesPerRequest: 2,
+				enableAutoPipelining: true,
+				enableReadyCheck: true,
+				family: 4, // Use IPv4
+			});
+		} else {
+			// Use individual config (for local Redis or custom setups)
+			const isLocal = redisHost === 'localhost' || redisHost === '127.0.0.1';
+			
+			redis = new Redis({
+				host: redisHost,
+				port: parseInt(redisPort, 10),
+				password: redisPassword,
+				// Connection settings optimized for local vs remote
+				connectTimeout: isLocal ? 5000 : 15000,
+				commandTimeout: isLocal ? 3000 : 8000,
+				lazyConnect: false,
+				maxRetriesPerRequest: isLocal ? 1 : 3,
+				enableAutoPipelining: true,
+				enableReadyCheck: true,
+				family: 4, // Use IPv4
+				// Additional settings for remote Redis
+				...((!isLocal) && {
+					retryDelayOnFailover: 100,
+					enableOfflineQueue: false,
+				})
+			});
+		}
 
 		// Track connection state to prevent spam
 		let hasLoggedDisconnection = false;
