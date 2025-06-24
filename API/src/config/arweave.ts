@@ -98,7 +98,7 @@ export async function initializeArweave(): Promise<ArweaveConfig> {
 				: WarpFactory.forLocal(ARLOCAL_PORT);
 
 			console.log(
-				`Configured for ArLocal development server on localhost:${ARLOCAL_PORT}`,
+				`Configured for ArLocal development server on PORT:${ARLOCAL_PORT}`,
 			);
 		} catch (error) {
 			console.warn("Failed to start ArLocal:", (error as Error).message);
