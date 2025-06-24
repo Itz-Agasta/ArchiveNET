@@ -1,5 +1,5 @@
 import express from "express";
-import { createUser, getUserByClerkId } from "../database/models/User.js";
+import { createUser, getUserByClerkId } from "../database/models/user";
 import { createUserSubscription, getUserSubscription, updateUserSubscription } from "../database/models/UserSubscription.js";
 import { auth } from "../middlewares/auth.js";
 import { verifyTransaction } from "../utils/etherscan.js";
