@@ -10,7 +10,7 @@ import {
 import { usersTable } from "./users";
 
 /**
- * Instance-Keys Table Schema
+ * Keys Table Schema
  *
  * @Notes
  * - One user can have multiple API keys (1:N relationship)
@@ -30,14 +30,14 @@ export const keysTable = pgTable(
 		lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
 	},
 	(table) => ({
-		clerkIdIdx: index("instances_clerk_id_idx").on(table.clerkId),
-		activeInstancesIdx: index("active_instances_idx").on(table.isActive),
-		keyHashIdx: index("instance_key_hash_idx").on(table.instanceKeyHash),
+		clerkIdIdx: index("keys_clerk_idx").on(table.clerkId),
+		activeKeysIdx: index("keys_active_idx").on(table.isActive),
+		instanceKeyHashIdx: index("keys_hash_idx").on(table.instanceKeyHash),
 	}),
 );
 
 // Keys ---> Users Relationship (many-to-one)
-export const instanceRelations = relations(keysTable, ({ one }) => ({
+export const keyRelations = relations(keysTable, ({ one }) => ({
 	user: one(usersTable, {
 		fields: [keysTable.clerkId],
 		references: [usersTable.clerkId],
@@ -45,6 +45,6 @@ export const instanceRelations = relations(keysTable, ({ one }) => ({
 }));
 
 // Users ---> keys Relationship (one-to-many)
-export const userInstanceRelations = relations(usersTable, ({ many }) => ({
-	instances: many(keysTable),
+export const userKeyRelations = relations(usersTable, ({ many }) => ({
+	keys: many(keysTable),
 }));
