@@ -9,7 +9,7 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
-import { usersTable } from "./users.js";
+import { usersTable } from "./users";
 
 export const subscriptionPlanEnum = pgEnum("subscription_plan", [
 	"basic",
