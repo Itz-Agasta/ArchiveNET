@@ -29,9 +29,11 @@ export const subscriptionsTable = pgTable(
 	"subscriptions",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
-		clerkId: text("clerk_id").notNull(),
+		clerkId: text("clerk_id")
+			.notNull()
+			.references(() => usersTable.clerkId, { onDelete: "cascade" }),
 		plan: subscriptionPlanEnum("plan").notNull(),
-		quotaLimit: integer("quota_limit").notNull(),
+		quotaLimit: integer("quota_limit").notNull().default(1000),
 		quotaUsed: integer("quota_used").notNull().default(0),
 		isActive: boolean("is_active").notNull().default(true),
 		renewsAt: timestamp("renews_at", { withTimezone: true }).notNull(),
