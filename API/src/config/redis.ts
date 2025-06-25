@@ -11,13 +11,14 @@ import { Redis } from "ioredis";
  * @throws Never throws - all errors are caught and logged as warnings
  */
 export async function initializeRedis(): Promise<Redis | undefined> {
-
 	const redisHost = process.env.REDIS_SERVER;
 	const redisPort = process.env.REDIS_PORT;
 	const redisPassword = process.env.REDIS_AUTH_KEY;
 
 	if (!redisHost || !redisPort) {
-		console.log("No Redis configuration provided, proceeding without Redis cache");
+		console.log(
+			"No Redis configuration provided, proceeding without Redis cache",
+		);
 		return undefined;
 	}
 
