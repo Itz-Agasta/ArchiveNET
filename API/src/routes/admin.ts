@@ -277,7 +277,7 @@ router.get("/", async (req, res) => {
  *   "message": "Eizen contract deployed successfully"
  * }
  */
-router.post("/deploy", async (req, res) => {
+router.post("/deploy", async (_req, res) => {
 	try {
 		const deployResult = await EizenService.deployNewContract();
 		const contractTxId = deployResult.contractId;

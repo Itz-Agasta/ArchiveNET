@@ -9,8 +9,7 @@
  */
 
 import { Redis } from "ioredis";
-import type { JWKInterface } from "warp-contracts";
-import type { Warp } from "warp-contracts";
+import type { JWKInterface, Warp } from "warp-contracts";
 
 /**
  * Checks if ArLocal is running on the specified port
@@ -81,6 +80,9 @@ export async function validateWalletAddress(
  * checks and status endpoints. Results are cached for 30 seconds to prevent
  * excessive Redis connections on frequent health checks.
  *
+ * Uses the new Redis configuration style with REDIS_SERVER, REDIS_PORT, and REDIS_AUTH_KEY
+ * environment variables to match the connection setup in redis.ts.
+ *
  * @returns Promise<Object> - Connection status and details
  * @throws Never throws - all errors are caught and returned as status
  *
@@ -111,14 +113,16 @@ export async function checkRedisConnectivity(): Promise<{
 		return healthCheckCache.result;
 	}
 
-	const redisUrl = process.env.REDIS_URL;
+	const redisHost = process.env.REDIS_SERVER;
+	const redisPort = process.env.REDIS_PORT;
+	const redisPassword = process.env.REDIS_AUTH_KEY;
 
-	if (!redisUrl) {
+	if (!redisHost || !redisPort) {
 		const result = {
 			configured: false,
 			connected: false,
 			status: "not configured",
-			details: "REDIS_URL environment variable not set",
+			details: "REDIS_SERVER or REDIS_PORT environment variables not set",
 		};
 
 		// Cache the result
@@ -127,7 +131,16 @@ export async function checkRedisConnectivity(): Promise<{
 	}
 
 	// Create a temporary Redis connection just for testing
-	const testRedis = new Redis(redisUrl);
+	const testRedis = new Redis({
+		host: redisHost,
+		port: parseInt(redisPort, 10),
+		password: redisPassword,
+		connectTimeout: 2000,
+		commandTimeout: 2000,
+		lazyConnect: false,
+		maxRetriesPerRequest: 1,
+		family: 4, // Use IPv4
+	});
 
 	try {
 		// Add error handler to prevent unhandled error events
@@ -155,10 +168,10 @@ export async function checkRedisConnectivity(): Promise<{
 		return result;
 	} catch (error) {
 		const result = {
-			configured:  true,
+			configured: true,
 			connected: false,
 			status: "disconnected",
-			details: "Redis connection failed",
+			details: `Redis connection failed: ${error instanceof Error ? error.message : "Unknown error"}`,
 		};
 
 		// Cache the result
@@ -193,12 +206,13 @@ export async function checkWalletBalance(
 	try {
 		const walletAddress = await warp.arweave.wallets.jwkToAddress(wallet);
 		const balance = await warp.arweave.wallets.getBalance(walletAddress); // Convert Winston to AR for display (1 AR = 1,000,000,000,000 Winston)
-		const readableBalance = (Number.parseInt(balance) / 1000000000000).toFixed(
-			6,
-		);
+		const readableBalance = (
+			Number.parseInt(balance, 10) / 1000000000000
+		).toFixed(6);
 
 		return {
-			hasBalance: Number.parseInt(balance) >= Number.parseInt(requiredBalance),
+			hasBalance:
+				Number.parseInt(balance, 10) >= Number.parseInt(requiredBalance, 10),
 			currentBalance: balance,
 			walletAddress,
 			readableBalance,

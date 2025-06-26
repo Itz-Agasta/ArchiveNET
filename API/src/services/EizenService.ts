@@ -549,7 +549,7 @@ Command: ${rechargeInfo.instructions}`,
 				isInitialized: this.isInitialized,
 				contractId: this.contractId,
 			};
-		} catch (error) {
+		} catch {
 			return {
 				totalVectors: 0,
 				isInitialized: this.isInitialized,
