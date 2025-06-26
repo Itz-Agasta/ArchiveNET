@@ -1,10 +1,13 @@
 import { type Request, type Response, Router } from "express";
-import { EizenService } from "../services/EizenService.js";
-import { errorResponse, successResponse } from "../utils/responses.js";
+import {
+	getInstanceByUserId,
+	updateInstanceKeyHash,
+} from "../database/models/instances.js";
 import { getUserSubscription } from "../database/models/UserSubscription.js";
-import { getInstanceByUserId, updateInstanceKeyHash } from "../database/models/instances.js";
-import { generateContractHash } from "../utils/contract.js";
 import { auth } from "../middlewares/auth.js";
+import { EizenService } from "../services/EizenService.js";
+import { generateContractHash } from "../utils/contract.js";
+import { errorResponse, successResponse } from "../utils/responses.js";
 
 //Payment webhook contract deployment
 
@@ -26,7 +29,6 @@ const router = Router();
  * 7. Webhook stores contract ID & API key in Neon DB
  * 8. Webhook sends email to user with api key
  * 
- * @dev saswata
 
  * TODO: Add authentication middleware to ensure only webhook can call this
  * TODO: Add request validation schema for user data
@@ -37,60 +39,62 @@ const router = Router();
 router.post("/contract", auth, async (req: Request, res: Response) => {
 	try {
 		const userId = req.userId; // Get user ID from request body or auth middleware
-		if(!userId) {
+		if (!userId) {
 			res.status(400).json({
-				message: "User ID is required for contract deployment"
-			   });
-   		   return;
+				message: "User ID is required for contract deployment",
+			});
+			return;
 		}
 
 		// only verify subscription as payment is already verified when creating subscription
 		const user_subscription = await getUserSubscription(userId);
-		if(!user_subscription) {
-   			res.status(400).json({
- 				message: "User subscription not found"})
+		if (!user_subscription) {
+			res.status(400).json({
+				message: "User subscription not found",
+			});
 			return;
 		}
 		const subscriptionTier = user_subscription.plan;
-		  if(!subscriptionTier) {
-	  		res.status(400).json({
-	 			message: "User subscription tier not found"});
+		if (!subscriptionTier) {
+			res.status(400).json({
+				message: "User subscription tier not found",
+			});
 			return;
 		}
 
 		//Check if a contract already exists for the user
 		const existingInstance = await getInstanceByUserId(userId);
-		if(!existingInstance) {
+		if (!existingInstance) {
 			res.status(400).json({
-				message: "existing instance not found for user"
-				});
+				message: "existing instance not found for user",
+			});
 			return;
 		}
-		if(existingInstance.instanceKeyHash !== "") {
+		if (existingInstance.instanceKeyHash !== "") {
 			res.status(400).json({
-				message: "Contract already exists for user"
-				});
+				message: "Contract already exists for user",
+			});
 			return;
 		}
 
 		// Deploy new Eizen contract on Arweave
 		const deployResult = await EizenService.deployNewContract();
 		const contractTxId = deployResult.contractId;
-		if(!contractTxId) {
+		if (!contractTxId) {
 			res.status(500).json({
-				message: "Failed to deploy contract on Arweave"
-				});
+				message: "Failed to deploy contract on Arweave",
+			});
 			return;
-  		}
-		
+		}
+
 		// TODO: Log deployment for audit trail
 		console.log(`Contract deployed for user ${userId}: ${contractTxId}`);
 
 		const contractHash = generateContractHash(contractTxId, userId);
-		if(!contractHash) {
+		if (!contractHash) {
 			res.status(500).json({
-				message: "Failed to generate contract hash"
-				});
+				message: "Failed to generate contract hash",
+			});
 			return;
 		}
 		const contractHashFingerprint = contractHash.contractHashFingerprint;
@@ -100,11 +104,13 @@ router.post("/contract", auth, async (req: Request, res: Response) => {
 		//Verify contract ownership by the hash-fingerprint
 
 		// Update user's instance with the new contract hash
-		const update_contract_hash = await updateInstanceKeyHash(userId, hashedContractKey);
-		if(!update_contract_hash)
+		const update_contract_hash = await updateInstanceKeyHash(
+			userId,
+			hashedContractKey,
+		);
+		if (!update_contract_hash)
 			console.error(`Failed to update contract TX ID for user ${userId}`);
-		else 
-			console.log(`Updated contract TX ID for user ${userId}`);
+		else console.log(`Updated contract TX ID for user ${userId}`);
 
 		res.status(201).json(
 			successResponse(
@@ -140,29 +146,6 @@ router.post("/contract", auth, async (req: Request, res: Response) => {
 				),
 			);
 	}
-	}
-);
-
-/**
- * GET /deploy/status/:contractId
- * Check deployment status of a contract
- *
- * NOTE: its not mandatory
- *
- * TODO: Implement this endpoint to check Arweave transaction status
- * TODO: Add caching to avoid excessive Arweave queries
- * TODO: Return deployment progress/confirmation status
- */
-router.get("/status/:contractId", async (req: Request, res: Response) => {
-	// TODO: Implement contract deployment status check
-	res
-		.status(501)
-		.json(
-			errorResponse(
-				"Not implemented",
-				"Status check endpoint not yet implemented",
-			),
-		);
 });
 
 export default router;

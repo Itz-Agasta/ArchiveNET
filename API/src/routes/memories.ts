@@ -1,10 +1,10 @@
 import { type Request, type Response, Router } from "express";
+import { verifyContractHashMiddleware } from "../middlewares/contract.js";
 import { validateData } from "../middlewares/validate.js";
 import { createMemorySchema, searchMemorySchema } from "../schemas/memory.js";
 import { EizenService } from "../services/EizenService.js";
 import { MemoryService } from "../services/MemoryService.js";
 import { errorResponse, successResponse } from "../utils/responses.js";
-import { verifyContractHashMiddleware } from "../middlewares/contract.js";
 
 //  User-facing semantic memory API
 
@@ -12,7 +12,9 @@ const router = Router();
 
 // TODO: Replace this with actual user lookup from SQL database
 // This will be implemented when payment gateway integration is added
-async function getUserMemoryService(req: Request): Promise<MemoryService | void> {
+async function getUserMemoryService(
+	req: Request,
+): Promise<MemoryService | void> {
 	// TODO: Extract API key from request headers
 	// const apiKey = req.headers['x-api-key'] as string;
 
@@ -50,37 +52,42 @@ async function getUserMemoryService(req: Request): Promise<MemoryService | void>
  *   }
  * }
  */
-router.post("/insert", verifyContractHashMiddleware, validateData(createMemorySchema), async (req, res) => {
-	try {
-		const memoryService = await getUserMemoryService(req);
-		if (!memoryService) {
+router.post(
+	"/insert",
+	verifyContractHashMiddleware,
+	validateData(createMemorySchema),
+	async (req, res) => {
+		try {
+			const memoryService = await getUserMemoryService(req);
+			if (!memoryService) {
+				res
+					.status(500)
+					.json(
+						errorResponse(
+							"Memory service not available",
+							"Unable to initialize memory service",
+						),
+					);
+				return;
+			}
+			const result = await memoryService.createMemory(req.body);
+
+			res
+				.status(201)
+				.json(successResponse(result, "Memory created successfully"));
+		} catch (error) {
+			console.error("Memory creation error:", error);
 			res
 				.status(500)
 				.json(
 					errorResponse(
-						"Memory service not available",
-						"Unable to initialize memory service",
+						"Failed to create memory",
+						error instanceof Error ? error.message : "Unknown error",
 					),
 				);
-			return;
 		}
-		const result = await memoryService.createMemory(req.body);
-
-		res
-			.status(201)
-			.json(successResponse(result, "Memory created successfully"));
-	} catch (error) {
-		console.error("Memory creation error:", error);
-		res
-			.status(500)
-			.json(
-				errorResponse(
-					"Failed to create memory",
-					error instanceof Error ? error.message : "Unknown error",
-				),
-			);
-	}
-});
+	},
+);
 
 /**
  * GET /memories/search
@@ -92,74 +99,78 @@ router.post("/insert", verifyContractHashMiddleware, validateData(createMemorySc
  * - k: Number of results (optional, default 10)
  * - filters: Optional JSON string with search filters
  */
-router.get("/search", verifyContractHashMiddleware, async (req: Request, res: Response): Promise<void> => {
-	try {
-		const { query, k, filters } = req.query;
+router.get(
+	"/search",
+	verifyContractHashMiddleware,
+	async (req: Request, res: Response): Promise<void> => {
+		try {
+			const { query, k, filters } = req.query;
 
-		if (!query || typeof query !== "string") {
-			res
-				.status(400)
-				.json(
-					errorResponse(
-						"Invalid query parameter",
-						"Query parameter is required and must be a string",
-					),
-				);
-			return;
-		}
+			if (!query || typeof query !== "string") {
+				res
+					.status(400)
+					.json(
+						errorResponse(
+							"Invalid query parameter",
+							"Query parameter is required and must be a string",
+						),
+					);
+				return;
+			}
 
-		// Parse search request
-		const searchRequest = {
-			query,
-			k: k ? Number.parseInt(k as string, 10) : 10,
-			filters: filters ? JSON.parse(filters as string) : undefined,
-		};
+			// Parse search request
+			const searchRequest = {
+				query,
+				k: k ? Number.parseInt(k as string, 10) : 10,
+				filters: filters ? JSON.parse(filters as string) : undefined,
+			};
 
-		// Validate the search request
-		const validatedRequest = searchMemorySchema.parse(searchRequest);
+			// Validate the search request
+			const validatedRequest = searchMemorySchema.parse(searchRequest);
 
-		const memoryService = await getUserMemoryService(req);
-		if (!memoryService) {
+			const memoryService = await getUserMemoryService(req);
+			if (!memoryService) {
+				res
+					.status(500)
+					.json(
+						errorResponse(
+							"Memory service not available",
+							"Unable to initialize memory service",
+						),
+					);
+				return;
+			}
+			const results = await memoryService.searchMemories(validatedRequest);
+
+			res.json(
+				successResponse(results, `Found ${results.length} relevant memories`),
+			);
+		} catch (error) {
+			console.error("Memory search error:", error);
+
+			if (error instanceof SyntaxError) {
+				res
+					.status(400)
+					.json(
+						errorResponse(
+							"Invalid filters parameter",
+							"Filters must be valid JSON",
+						),
+					);
+				return;
+			}
+
 			res
 				.status(500)
 				.json(
 					errorResponse(
-						"Memory service not available",
-						"Unable to initialize memory service",
+						"Failed to search memories",
+						error instanceof Error ? error.message : "Unknown error",
 					),
 				);
-			return;
 		}
-		const results = await memoryService.searchMemories(validatedRequest);
-
-		res.json(
-			successResponse(results, `Found ${results.length} relevant memories`),
-		);
-	} catch (error) {
-		console.error("Memory search error:", error);
-
-		if (error instanceof SyntaxError) {
-			res
-				.status(400)
-				.json(
-					errorResponse(
-						"Invalid filters parameter",
-						"Filters must be valid JSON",
-					),
-				);
-			return;
-		}
-
-		res
-			.status(500)
-			.json(
-				errorResponse(
-					"Failed to search memories",
-					error instanceof Error ? error.message : "Unknown error",
-				),
-			);
-	}
-});
+	},
+);
 
 /**
  * POST /memories/search
@@ -176,37 +187,42 @@ router.get("/search", verifyContractHashMiddleware, async (req: Request, res: Re
  *   }
  * }
  */
-router.post("/search", verifyContractHashMiddleware, validateData(searchMemorySchema), async (req, res) => {
-	try {
-		const memoryService = await getUserMemoryService(req);
-		if (!memoryService) {
+router.post(
+	"/search",
+	verifyContractHashMiddleware,
+	validateData(searchMemorySchema),
+	async (req, res) => {
+		try {
+			const memoryService = await getUserMemoryService(req);
+			if (!memoryService) {
+				res
+					.status(500)
+					.json(
+						errorResponse(
+							"Memory service not available",
+							"Unable to initialize memory service",
+						),
+					);
+				return;
+			}
+			const results = await memoryService.searchMemories(req.body);
+
+			res.json(
+				successResponse(results, `Found ${results.length} relevant memories`),
+			);
+		} catch (error) {
+			console.error("Memory search error:", error);
 			res
 				.status(500)
 				.json(
 					errorResponse(
-						"Memory service not available",
-						"Unable to initialize memory service",
+						"Failed to search memories",
+						error instanceof Error ? error.message : "Unknown error",
 					),
 				);
-			return;
 		}
-		const results = await memoryService.searchMemories(req.body);
-
-		res.json(
-			successResponse(results, `Found ${results.length} relevant memories`),
-		);
-	} catch (error) {
-		console.error("Memory search error:", error);
-		res
-			.status(500)
-			.json(
-				errorResponse(
-					"Failed to search memories",
-					error instanceof Error ? error.message : "Unknown error",
-				),
-			);
-	}
-});
+	},
+);
 
 /**
  * GET /memories/search/:id
