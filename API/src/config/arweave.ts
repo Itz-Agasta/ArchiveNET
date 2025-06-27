@@ -1,6 +1,6 @@
 import type { Redis } from "ioredis";
-import { type Warp, WarpFactory, defaultCacheOptions } from "warp-contracts";
 import type { JWKInterface } from "warp-contracts";
+import { defaultCacheOptions, type Warp, WarpFactory } from "warp-contracts";
 import { DeployPlugin } from "warp-contracts-plugin-deploy";
 import { RedisCache } from "warp-contracts-redis";
 import { checkWalletBalance, validateWalletAddress } from "../utils/helper.js";
@@ -172,7 +172,7 @@ export async function initializeArweave(): Promise<ArweaveConfig> {
 			if (arLocalService.isArLocalRunning()) {
 				await fundDevelopmentWallet(warp, wallet, walletAddress);
 			}
-		} catch (error) {
+		} catch (_error) {
 			// Generate and save new development wallet if file doesn't exist
 			console.log("Development wallet not found, creating new one...");
 			wallet = await warp.arweave.wallets.generate();
@@ -207,11 +207,11 @@ export async function initializeArweave(): Promise<ArweaveConfig> {
 }
 
 /**
-* Funds a wallet in ArLocal development environment
-* @param warp - Warp instance configured for ArLocal
-* @param wallet - JWK wallet to fund
-* @param address - Wallet address
-*/
+ * Funds a wallet in ArLocal development environment
+ * @param warp - Warp instance configured for ArLocal
+ * @param wallet - JWK wallet to fund
+ * @param address - Wallet address
+ */
 
 async function fundDevelopmentWallet(
 	warp: Warp,
