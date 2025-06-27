@@ -135,7 +135,7 @@ export class MailService {
             <!-- Footer -->
             <div style="background: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="color: #6b7280; margin: 0 0 10px 0; font-size: 14px;">
-                Built with ❤️ by the ArchiveNET Team
+                Built with ❤️ by the Team Vyse
               </p>
               <p style="color: #9ca3af; margin: 0; font-size: 12px;">
                 This email was sent because you deployed a contract on ArchiveNET.
