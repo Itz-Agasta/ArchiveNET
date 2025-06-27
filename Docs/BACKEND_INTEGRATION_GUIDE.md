@@ -43,7 +43,7 @@ export class VectorService {
 
   constructor(
     private config: {
-      contractTxId: string;
+      contractId: string;
       wallet: any;
       warpEnvironment: "mainnet" | "testnet" | "local";
     }
@@ -59,7 +59,7 @@ export class VectorService {
 
     const sdk = new SetSDK<string>(
       this.config.wallet,
-      this.config.contractTxId,
+      this.config.contractId,
       warp
     );
 
@@ -315,7 +315,7 @@ function loadWallet() {
 
 // Initialize services
 const vectorService = new VectorService({
-  contractTxId: process.env.CONTRACT_TX_ID!,
+  contractId: process.env.CONTRACT_ID!,
   wallet: loadWallet(), // Your wallet loading logic
   warpEnvironment: process.env.WARP_ENV as any,
 });
@@ -726,7 +726,7 @@ class VectorDatabaseService {
 
   async start(port: number = 3001) {
     this.vectorService = new VectorService({
-      contractTxId: process.env.CONTRACT_TX_ID!,
+      contractId: process.env.CONTRACT_ID!,
       wallet: loadWallet(),
       warpEnvironment: process.env.WARP_ENV as any,
     });

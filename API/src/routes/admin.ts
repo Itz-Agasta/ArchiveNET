@@ -273,22 +273,19 @@ router.get("/", async (req, res) => {
  * Response:
  * {
  *   "success": true,
- *   "data": { "contractTxId": "abc123..." },
+ *   "data": { "contractId": "abc123..." },
  *   "message": "Eizen contract deployed successfully"
  * }
  */
-router.post("/deploy", async (req, res) => {
+router.post("/deploy", async (_req, res) => {
 	try {
 		const deployResult = await EizenService.deployNewContract();
-		const contractTxId = deployResult.contractId;
+		const contractId = deployResult.contractId;
 
 		res
 			.status(201)
 			.json(
-				successResponse(
-					{ contractTxId },
-					"Eizen contract deployed successfully",
-				),
+				successResponse({ contractId }, "Eizen contract deployed successfully"),
 			);
 	} catch (error) {
 		console.error("Admin contract deploy error:", error);

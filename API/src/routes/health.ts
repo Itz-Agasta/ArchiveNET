@@ -11,7 +11,7 @@ const router = Router();
  * GET /health
  * Basic health check endpoint
  */
-router.get("/", (req, res) => {
+router.get("/", (_req, res) => {
 	res.json(
 		successResponse(
 			{
@@ -30,7 +30,7 @@ router.get("/", (req, res) => {
  * Detailed health check including service status
  * Note: Uses fallback contract for system health checks
  */
-router.get("/detailed", async (req, res) => {
+router.get("/detailed", async (_req, res) => {
 	try {
 		// For health checks, use fallback contract ID from environment
 		// This is for system monitoring, not user-specific operations
@@ -154,7 +154,7 @@ router.get("/detailed", async (req, res) => {
  * Specific health check for Eizen service
  * Note: Uses fallback contract for system health checks
  */
-router.get("/eizen", async (req, res) => {
+router.get("/eizen", async (_req, res) => {
 	try {
 		const fallbackContractId = process.env.EIZEN_CONTRACT_ID;
 
@@ -218,7 +218,7 @@ router.get("/eizen", async (req, res) => {
  * Specific health check for Memory service
  * Note: Uses fallback contract for system health checks
  */
-router.get("/memory", async (req, res) => {
+router.get("/memory", async (_req, res) => {
 	try {
 		const fallbackContractId = process.env.EIZEN_CONTRACT_ID;
 

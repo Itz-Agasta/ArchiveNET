@@ -50,7 +50,7 @@ export async function initializeRedis(): Promise<Redis | undefined> {
 			hasLoggedDisconnection = false; // Reset flag when connected
 		});
 
-		redis.on("error", (err) => {
+		redis.on("error", (_err) => {
 			// Only log disconnect once until reconnection
 			if (!hasLoggedDisconnection) {
 				console.warn("⚠️ Redis connection lost");

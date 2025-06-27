@@ -1,36 +1,36 @@
-import nodemailer from 'nodemailer';
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
 interface DeploymentSuccessData {
-  userEmail: string;
-  userName: string;
-  sessionKey: string;
-  contractId: string;
-  deploymentTime: Date;
+	userEmail: string;
+	userName: string;
+	sessionKey: string;
+	contractId: string;
+	deploymentTime: Date;
 }
 
 export class MailService {
-  private fromEmail =  process.env.EMAIL_SERVICE_USER;
-  private transporter;
+	private fromEmail = process.env.EMAIL_SERVICE_USER;
+	private transporter;
 
-  constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: "gmail",
-        auth: {
-            user: process.env.EMAIL_SERVICE_USER,
-            pass: process.env.EMAIL_SERVICE_PASS
-        }
-    });
-  }
+	constructor() {
+		this.transporter = nodemailer.createTransport({
+			service: "gmail",
+			auth: {
+				user: process.env.EMAIL_SERVICE_USER,
+				pass: process.env.EMAIL_SERVICE_PASS,
+			},
+		});
+	}
 
+	async sendDeploymentSuccess(data: DeploymentSuccessData): Promise<boolean> {
+		try {
+			const { userEmail, userName, sessionKey, contractId, deploymentTime } =
+				data;
 
-  async sendDeploymentSuccess(data: DeploymentSuccessData): Promise<boolean> {
-    try {
-      const { userEmail, userName, sessionKey, contractId, deploymentTime } = data;
-
-      const htmlContent = `
+			const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -57,7 +57,7 @@ export class MailService {
               </p>
               
               <p style="color: #4b5563; font-size: 16px; margin: 0 0 30px 0; line-height: 1.6;">
-                Congratulations! Your contract has been successfully deployed to ArchiveNET. 
+                Congratulations! Your contract has been successfully deployed to ArchiveNET.
                 You're now part of the next generation of decentralized storage solutions.
               </p>
               <!-- Credentials Card -->
@@ -90,7 +90,7 @@ export class MailService {
                   ⚠️ Important Security Notice
                 </h4>
                 <p style="color: #78350f; margin: 0; font-size: 14px; line-height: 1.5;">
-                  <strong>Keep these credentials safe!</strong> Your session key and contract ID are essential for accessing your ArchiveNET storage. 
+                  <strong>Keep these credentials safe!</strong> Your session key and contract ID are essential for accessing your ArchiveNET storage.
                   Store them in a secure password manager and never share them with anyone.
                 </p>
               </div>
@@ -100,15 +100,18 @@ export class MailService {
                   Deployment Details
                 </h4>
                 <p style="color: #0369a1; margin: 0; font-size: 14px;">
-                  <strong>Deployed at:</strong> ${deploymentTime.toLocaleString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    timeZoneName: 'short' 
-                  })}
+                  <strong>Deployed at:</strong> ${deploymentTime.toLocaleString(
+										"en-US",
+										{
+											weekday: "long",
+											year: "numeric",
+											month: "long",
+											day: "numeric",
+											hour: "2-digit",
+											minute: "2-digit",
+											timeZoneName: "short",
+										},
+									)}
                 </p>
               </div>
               <!-- Next Steps -->
@@ -125,7 +128,7 @@ export class MailService {
                 </ul>
               </div>
               <p style="color: #6b7280; font-size: 14px; margin: 0; line-height: 1.6;">
-                Need help? Our support team is here 24/7. Just reply to this email or visit our 
+                Need help? Our support team is here 24/7. Just reply to this email or visit our
                 <a href="https://discord.gg/EmmFRZXMSK" style="color: #4f46e5; text-decoration: none;">Discord</a>.
               </p>
             </div>
@@ -143,22 +146,24 @@ export class MailService {
         </html>
       `;
 
-      const result = await this.transporter.sendMail({
-        from: this.fromEmail,
-        to: userEmail,
-        subject: 'Your ArchiveNET Contract is Live! Important Access Details Inside',
-        html: htmlContent,
-      });
+			const result = await this.transporter.sendMail({
+				from: this.fromEmail,
+				to: userEmail,
+				subject:
+					"Your ArchiveNET Contract is Live! Important Access Details Inside",
+				html: htmlContent,
+			});
 
-      console.log('Deployment success email sent successfully:', result.messageId);
-      return true;
-    } catch (error) {
-      console.error('Mail service error:', error);
-      return false;
-    }
-  }
-
+			console.log(
+				"Deployment success email sent successfully:",
+				result.messageId,
+			);
+			return true;
+		} catch (error) {
+			console.error("Mail service error:", error);
+			return false;
+		}
+	}
 }
 
 export const mailService = new MailService();
-

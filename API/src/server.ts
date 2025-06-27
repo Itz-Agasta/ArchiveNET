@@ -14,11 +14,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import helmet from "helmet";
-
+import { arLocalService } from "./config/arlocal.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import { EizenService } from "./services/EizenService.js";
 import { embeddingService } from "./services/EmbeddingService.js";
-import { arLocalService } from "./config/arlocal.js";
 
 dotenv.config();
 
@@ -50,10 +49,7 @@ initializeServices()
 		const healthRoutes = await import("./routes/health.js");
 		const memoryRoutes = await import("./routes/memories.js");
 		const adminRoutes = await import("./routes/admin.js");
-		const deploymentRoutes = await import("./routes/deployment.js");
-		const { instanceRouter } = await import("./routes/instanceRouter.js");
-		const { userRouter } = await import("./routes/user.js");
-		const { userSubscriptionsRouter } = await import("./routes/userSubscriptions.js");
+		const deploymentRoutes = await import("./routes/deploy.js");
 		const { webhook } = await import("./routes/webhook.js");
 
 		const app = express();
@@ -100,14 +96,11 @@ initializeServices()
 		});
 
 		// API route registration
-		app.use("/health", healthRoutes.default); // System health checks and monitoring
-		app.use("/admin", adminRoutes.default); // Admin-only vector database operations
-		app.use("/memories", memoryRoutes.default); // User-facing semantic memory API
-		app.use("/deploy", deploymentRoutes.default); // Smart contract deployment
-		app.use("/instances", instanceRouter); // User instance management
-		app.use("/users", userRouter); // User management and authentication
-		app.use("/subscriptions", userSubscriptionsRouter); // User subscription management
-		app.use("/webhook", webhook); // Webhook endpoints for payment and deployment
+		app.use("/health", healthRoutes.default);
+		app.use("/admin", adminRoutes.default);
+		app.use("/memories", memoryRoutes.default);
+		app.use("/deploy", deploymentRoutes.default);
+		app.use("/webhook", webhook);
 
 		// Global error handling middleware (must be last)
 		app.use(errorHandler);

@@ -157,6 +157,7 @@ Command: ${rechargeInfo.instructions}`,
 
 			const isProduction = process.env.NODE_ENV === "production";
 
+			// Eizen internally uses contractTxId, we get it and then return as contractId for API consistency
 			let contractTxId: string;
 
 			if (isProduction) {
@@ -209,6 +210,7 @@ Command: ${rechargeInfo.instructions}`,
 				"deployment",
 			);
 
+			// Return contractId for API consistency (Eizen internally uses contractTxId)
 			return { contractId: contractTxId };
 		} catch (error) {
 			console.error("Failed to deploy contract:", error);
@@ -549,7 +551,7 @@ Command: ${rechargeInfo.instructions}`,
 				isInitialized: this.isInitialized,
 				contractId: this.contractId,
 			};
-		} catch (error) {
+		} catch {
 			return {
 				totalVectors: 0,
 				isInitialized: this.isInitialized,
