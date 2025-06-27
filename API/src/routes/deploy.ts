@@ -27,7 +27,7 @@ const router = Router();
  *   "success": true,
  *   "message": "Eizen contract deployed successfully",
  *   "data": {
- *     "contractTxId": "arweave_tx_abc123",
+ *     "contractId": "arweave_tx_abc123",
  *     "contractHashFingerprint": "hash_fingerprint_def456",
  *     "userId": "user_clerkId789",
  *     "deployedAt": "2025-06-26T10:30:00.000Z",

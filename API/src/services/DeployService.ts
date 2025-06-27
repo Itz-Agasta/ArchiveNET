@@ -9,7 +9,7 @@ import { EizenService } from "./EizenService.js";
 export interface DeploymentResult {
 	success: boolean;
 	data?: {
-		contractTxId: string;
+		contractId: string;
 		contractHashFingerprint: string;
 		userId: string;
 		deployedAt: string;
@@ -105,15 +105,15 @@ export async function deployContract(): Promise<{
 	try {
 		// Delegate to EizenService for actual contract deployment
 		const deployResult = await EizenService.deployNewContract();
-		const contractTxId = deployResult.contractId;
+		const contractId = deployResult.contractId;
 
 		// Validate that deployment was successful and returned a contract ID
-		if (!contractTxId) {
+		if (!contractId) {
 			return { success: false, error: "Failed to deploy contract on Arweave" };
 		}
 
-		console.log(`Contract deployed successfully: ${contractTxId}`);
-		return { success: true, contractId: contractTxId };
+		console.log(`Contract deployed successfully: ${contractId}`);
+		return { success: true, contractId };
 	} catch (error) {
 		console.error("Error deploying contract:", error);
 		return { success: false, error: "Contract deployment failed" };
@@ -254,7 +254,7 @@ export async function deployForUser(userId: string): Promise<DeploymentResult> {
 		return {
 			success: true,
 			data: {
-				contractTxId: deployment.contractId as string,
+				contractId: deployment.contractId as string,
 				contractHashFingerprint: (hashProcessing.hashData as ContractHashData)
 					.contractHashFingerprint,
 				userId,
