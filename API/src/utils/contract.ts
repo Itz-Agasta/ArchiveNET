@@ -1,31 +1,26 @@
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
 
-if(!process.env.CONTRACT_JWT_SECRET && process.env.NODE_ENV !== 'development') {
-    throw new Error('CONTRACT_JWT_SECRET environment variable is not set');
+if (
+	!process.env.CONTRACT_JWT_SECRET &&
+	process.env.NODE_ENV !== "development"
+) {
+	throw new Error("CONTRACT_JWT_SECRET environment variable is not set");
 }
 
 const JWT_SECRET = process.env.CONTRACT_JWT_SECRET ?? "hack4bengal_vyse";
-const JWT_ISSUER = 'archivenet-api';
-const JWT_AUDIENCE = 'archivenet-users';
+const JWT_ISSUER = "archivenet-api";
+const JWT_AUDIENCE = "archivenet-users";
 
 export interface ContractHashPayload {
-    /** Contract ID from Arweave wallet */
-    contractId: string;
-
-    /** Associated user ID */
-    userId: string;
-
-    /** Timestamp of hash creation */
-    createdAt: number;
+	contractId: string;
+	userId: string;
+	createdAt: number;
 }
 
 export interface ContractHashResult {
-    /** JWT token containing contract hash */
-    contractHashFingerprint: string;
-
-    /** SHA-256 hash of the contract token, to be stored in DB */
-    hashedContractKey: string;
+	contractHashFingerprint: string; //JWT token containing contract hash
+	hashedContractKey: string; // SHA-256 hash of the contract token, to be stored in DB
 }
 
 /**
@@ -38,25 +33,31 @@ export interface ContractHashResult {
  * @param userId - The user ID associated with the contract.
  * @returns ContractHashResult - Contains the signed JWT token and hashed token.
  */
-export const generateContractHash = (contractId: string, userId: string): ContractHashResult => {
-    const payload: ContractHashPayload = {
-        contractId,
-        userId,
-        createdAt: Date.now(),
-    };
+export const generateContractHash = (
+	contractId: string,
+	userId: string,
+): ContractHashResult => {
+	const payload: ContractHashPayload = {
+		contractId,
+		userId,
+		createdAt: Date.now(),
+	};
 
-    const token = jwt.sign(payload, JWT_SECRET, {
-        issuer: JWT_ISSUER,
-        audience: JWT_AUDIENCE,
-    });
+	const token = jwt.sign(payload, JWT_SECRET, {
+		issuer: JWT_ISSUER,
+		audience: JWT_AUDIENCE,
+	});
 
-    // Hash token for secure DB storage
-    const hashedContractKey = crypto.createHash('sha256').update(token).digest('hex');
+	// Hash token for secure DB storage
+	const hashedContractKey = crypto
+		.createHash("sha256")
+		.update(token)
+		.digest("hex");
 
-    return {
-        contractHashFingerprint: token,
-        hashedContractKey,
-    };
+	return {
+		contractHashFingerprint: token,
+		hashedContractKey,
+	};
 };
 
 /**
@@ -68,16 +69,18 @@ export const generateContractHash = (contractId: string, userId: string): Contra
  * @param token - The contract hash token to verify.
  * @returns The decoded ContractHashPayload if valid, or null otherwise.
  */
-export const verifyContractHash = (token: string): ContractHashPayload | null => {
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET, {
-            issuer: JWT_ISSUER,
-            audience: JWT_AUDIENCE,
-            algorithms: ['HS256'],
-        }) as ContractHashPayload;
+export const verifyContractHash = (
+	token: string,
+): ContractHashPayload | null => {
+	try {
+		const decoded = jwt.verify(token, JWT_SECRET, {
+			issuer: JWT_ISSUER,
+			audience: JWT_AUDIENCE,
+			algorithms: ["HS256"],
+		}) as ContractHashPayload;
 
-        return decoded;
-    } catch {
-        return null;
-    }
+		return decoded;
+	} catch {
+		return null;
+	}
 };

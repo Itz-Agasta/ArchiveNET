@@ -14,7 +14,7 @@ const router = Router();
 // This will be implemented when payment gateway integration is added
 async function getUserMemoryService(
 	req: Request,
-): Promise<MemoryService | void> {
+): Promise<MemoryService | undefined> {
 	// TODO: Extract API key from request headers
 	// const apiKey = req.headers['x-api-key'] as string;
 
