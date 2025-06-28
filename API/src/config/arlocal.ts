@@ -6,9 +6,7 @@ export class ArLocalService {
 		null;
 
 	private isRunning = false;
-
 	private port = 1984;
-
 	constructor(port = 1984) {
 		this.port = port;
 	}
@@ -18,7 +16,6 @@ export class ArLocalService {
 			console.log("ArLocal is already running");
 
 			// Verify it's actually accessible
-
 			const accessible = await this.isArLocalAccessible();
 
 			if (!accessible) {
@@ -27,7 +24,6 @@ export class ArLocalService {
 				);
 
 				await this.stop();
-
 				// Continue with start process below
 			} else {
 				return;
@@ -46,29 +42,19 @@ export class ArLocalService {
 			}
 
 			await this.arLocal.start();
-
 			this.isRunning = true;
-
-			// console.log(`ArLocal started successfully on port ${this.port}`);
-
 			// Give ArLocal a moment to fully initialize
-
 			await new Promise((resolve) => setTimeout(resolve, 3000));
 
 			// Verify it's accessible
-
 			const accessible = await this.isArLocalAccessible();
-
 			if (!accessible) {
 				throw new Error("ArLocal started but is not accessible");
 			}
 		} catch (error) {
 			console.error("Failed to start ArLocal:", error);
-
 			this.isRunning = false;
-
 			this.arLocal = null;
-
 			throw error;
 		}
 	}
@@ -76,23 +62,16 @@ export class ArLocalService {
 	async stop(): Promise<void> {
 		if (!this.isRunning || !this.arLocal) {
 			console.log("ArLocal is not running");
-
 			return;
 		}
-
 		try {
 			console.log("Stopping ArLocal...");
-
 			await this.arLocal.stop();
-
 			this.arLocal = null;
-
 			this.isRunning = false;
-
 			console.log("ArLocal stopped successfully");
 		} catch (error) {
 			console.error("Failed to stop ArLocal:", error);
-
 			throw error;
 		}
 	}
@@ -101,22 +80,17 @@ export class ArLocalService {
 		if (!this.isRunning) {
 			throw new Error("ArLocal is not running");
 		}
-
 		try {
 			const arweave = Arweave.init({
 				host: "localhost",
-
 				port: this.port,
-
 				protocol: "http",
 			});
 
 			await arweave.api.get("mine");
-
 			console.log("Block mined successfully");
 		} catch (error) {
 			console.error("Failed to mine block:", error);
-
 			throw error;
 		}
 	}
@@ -133,12 +107,9 @@ export class ArLocalService {
 		if (!this.isRunning) {
 			throw new Error("ArLocal is not running");
 		}
-
 		return Arweave.init({
 			host: "localhost",
-
 			port: this.port,
-
 			protocol: "http",
 		});
 	}
@@ -147,29 +118,21 @@ export class ArLocalService {
 		if (!this.isRunning) {
 			return false;
 		}
-
 		try {
 			const arweave = Arweave.init({
 				host: "localhost",
-
 				port: this.port,
-
 				protocol: "http",
 			});
 
 			// Try to get network info to verify ArLocal is responding
-
 			await arweave.network.getInfo();
-
 			return true;
 		} catch (error) {
 			console.warn("ArLocal is not accessible:", (error as Error).message);
-
 			return false;
 		}
 	}
 }
-
-// Singleton instance
 
 export const arLocalService = new ArLocalService();
