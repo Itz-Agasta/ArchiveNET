@@ -121,12 +121,18 @@ export class EizenService {
 	 */
 	static async deployNewContract(): Promise<{
 		contractId: string;
+		walletAddress: string;
 	}> {
 		// Initialize shared Arweave config
 		const arweaveConfig = await EizenService.getSharedArweaveConfig();
 
 		try {
 			console.log("Deploying new Eizen contract...");
+
+			// Get wallet address that will be used for deployment
+			const walletAddress = await arweaveConfig.warp.arweave.wallets.getAddress(
+				arweaveConfig.wallet,
+			);
 
 			// Check wallet balance before attempting deployment
 			const balanceInfo = await checkWalletBalance(
@@ -181,10 +187,6 @@ Command: ${rechargeInfo.instructions}`,
 				);
 
 				// Set the owner to our wallet address
-				const walletAddress =
-					await arweaveConfig.warp.arweave.wallets.getAddress(
-						arweaveConfig.wallet,
-					);
 				initialState.owner = walletAddress;
 
 				const result = await arweaveConfig.warp.deploy({
@@ -210,8 +212,10 @@ Command: ${rechargeInfo.instructions}`,
 				"deployment",
 			);
 
-			// Return contractId for API consistency (Eizen internally uses contractTxId)
-			return { contractId: contractTxId };
+			return {
+				contractId: contractTxId,
+				walletAddress: walletAddress,
+			};
 		} catch (error) {
 			console.error("Failed to deploy contract:", error);
 			throw new Error(

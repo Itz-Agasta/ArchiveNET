@@ -50,7 +50,6 @@ router.post("/", auth, async (req: Request, res: Response) => {
 		// This handles all validation, deployment, and post-processing steps
 		const deploymentResult = await deployForUser(userId);
 
-		// Handle deployment failure cases
 		if (!deploymentResult.success) {
 			res.status(400).json({
 				message: deploymentResult.error || "Deployment failed",
@@ -67,8 +66,6 @@ router.post("/", auth, async (req: Request, res: Response) => {
 					"Eizen contract deployed successfully",
 				),
 			);
-
-		// TODO: Implement post-deployment notifications
 	} catch (error) {
 		console.error("Contract deployment error:", error);
 		res

@@ -1,100 +1,93 @@
-import { type Request, type Response, Router } from "express";
+import { Router } from "express";
+import { z } from "zod";
 import { validateData } from "../middlewares/validate.js";
-import {
-	adminInsertVectorSchema,
-	adminSearchVectorSchema,
-} from "../schemas/eizen.js";
+import { createMemorySchema, searchMemorySchema } from "../schemas/memory.js";
 import { EizenService } from "../services/EizenService.js";
+import { MemoryService } from "../services/MemoryService.js";
 import { errorResponse, successResponse } from "../utils/responses.js";
 
 /**
- * ADMIN ROUTES - ArchiveNET Vector Database Administration
+ * ADMIN ROUTES - ArchiveNET Memory Service Administration
  *
- * These routes provide direct low-level access to the Eizen vector database
+ * These routes provide direct high-level access to the Memory Service
  * for administrative purposes only. They are NOT intended for public use.
- *
- * Access Level: ADMIN ONLY
- * Authentication: Flexible contract ID (request body/query params or environment)
- *
- * Contract ID Options:
- * 1. Include 'contractId' in request body (POST routes) or query params (GET routes)
- * 2. Set EIZEN_CONTRACT_ID environment variable as fallback
- * 3. If neither provided, operation will fail with clear error message
- *
- * Use Cases:
- * - Direct vector manipulation for testing with different contracts
- * - Database administration and monitoring across multiple contracts
- * - System debugging and maintenance
- * - Contract deployment for new instances
  *
  * Security Note: These endpoints bypass user authentication and operate
  * directly on the specified contract. (Will private this endpoint later)
  */
 
+// Admin-specific schemas with required contract ID
+const adminCreateMemorySchema = createMemorySchema.extend({
+	contractId: z.string().min(1, "Contract ID is required"),
+});
+
+const adminSearchMemorySchema = searchMemorySchema.extend({
+	contractId: z.string().min(1, "Contract ID is required"),
+});
+
 const router = Router();
 
 /**
- * Get admin Eizen service instance
- * Uses the contract ID from request body or environment variables for admin operations
+ * Get admin Memory service instance
+ * Uses the contract ID from request - contract ID is required
  *
- * @param contractId - Optional contract ID from request body
- * @returns Promise<EizenService> - Admin Eizen service instance
- * @throws Error if no contract ID is provided in request or environment
+ * @param contractId - Required contract ID from request
+ * @returns Promise<MemoryService> - Admin Memory service instance
+ * @throws Error if no contract ID is provided
  */
-async function getAdminEizenService(
-	contractId?: string,
-): Promise<EizenService> {
-	// Use contractId from request body if provided, otherwise fallback to environment
-	const finalContractId = contractId || process.env.EIZEN_CONTRACT_ID;
-
-	if (!finalContractId) {
+async function getAdminMemoryService(
+	contractId: string,
+): Promise<MemoryService> {
+	if (!contractId) {
 		throw new Error(
-			"Contract ID not provided. Please include 'contractId' in your request body or set EIZEN_CONTRACT_ID in environment variables.",
+			"Contract ID is required. Please include 'contractId' in your request.",
 		);
 	}
 
-	return await EizenService.forContract(finalContractId);
+	const eizenService = await EizenService.forContract(contractId);
+	return new MemoryService(eizenService);
 }
 
 /**
  * POST /admin/insert
- * Insert a vector with optional metadata into the Eizen database
+ * Create a memory from text content with optional metadata
  *
- * Admin Use Case: Direct vector insertion for testing and data seeding
+ * Admin Use Case: Direct memory creation for testing and data seeding
+ * Uses MemoryService to handle text-to-embedding conversion automatically
  *
  * Request body:
  * {
- *   "vector": [0.1, 0.2, 0.3, ...],  // Raw vector data (float array)
- *   "metadata": { "key": "value", ... }, // Optional metadata object
- *   "contractId": "your-contract-id"  // Optional contract ID (fallback to env variable)
+ *   "content": "User prefers dark mode interface",  // Text content to store
+ *   "metadata": { "tags": ["preference"], "importance": 8 }, // Optional metadata object
+ *   "contractId": "your-contract-id"  // Required contract ID
  * }
  *
  * Response:
  * {
  *   "success": true,
- *   "data": { "vectorId": 123 },
- *   "message": "Vector inserted successfully"
+ *   "data": { "memoryId": 123, "message": "Memory created from 25 characters of content" },
+ *   "message": "Memory created successfully"
  * }
  */
 router.post(
 	"/insert",
-	validateData(adminInsertVectorSchema),
+	validateData(adminCreateMemorySchema),
 	async (req, res) => {
 		try {
-			const { contractId, ...vectorData } = req.body;
-			const eizenService = await getAdminEizenService(contractId);
-			const result = await eizenService.insertVector(vectorData);
+			const { contractId, ...memoryData } = req.body;
+			const memoryService = await getAdminMemoryService(contractId);
+			const result = await memoryService.createMemory(memoryData);
 
 			res
 				.status(201)
-				.json(successResponse(result, "Vector inserted successfully"));
+				.json(successResponse(result, "Memory created successfully"));
 		} catch (error) {
-			console.error("Admin vector insert error:", error);
+			console.error("Admin memory creation error:", error);
 			res
 				.status(500)
 				.json(
 					errorResponse(
-						"Failed to insert vector",
+						"Failed to create memory",
 						error instanceof Error ? error.message : "Unknown error",
 					),
 				);
@@ -104,115 +97,51 @@ router.post(
 
 /**
  * POST /admin/search
- * Search for similar vectors using k-nearest neighbors
+ * Search for similar memories using natural language queries
  *
- * Admin Use Case: Direct vector similarity search for testing and debugging
+ * Admin Use Case: Direct semantic memory search for testing and debugging
+ * Uses MemoryService to handle query-to-embedding conversion automatically
  *
  * Request body:
  * {
- *   "query": [0.1, 0.2, 0.3, ...],  // Query vector (float array)
- *   "k": 10,                        // Number of results (optional, defaults to 10)
- *   "contractId": "your-contract-id" // Optional contract ID (fallback to env variable)
+ *   "query": "user interface preferences",
+ *   "k": 10,                               // Number of results (optional, defaults to 10)
+ *   "filters": {                           // Optional filters
+ *     "tags": ["preference"],
+ *     "importance_min": 5
+ *   },
+ *   "contractId": "your-contract-id"       // Required contract ID
  * }
  *
  * Response:
  * {
  *   "success": true,
  *   "data": [
- *     { "id": 123, "distance": 0.15, "metadata": {...} },
- *     { "id": 456, "distance": 0.23, "metadata": {...} }
+ *     { "id": 123, "content": "User prefers dark mode", "distance": 0.15, "metadata": {...} },
+ *     { "id": 456, "content": "Interface should be minimal", "distance": 0.23, "metadata": {...} }
  *   ],
- *   "message": "Found 2 similar vectors"
+ *   "message": "Found 2 similar memories"
  * }
  */
 router.post(
 	"/search",
-	validateData(adminSearchVectorSchema),
+	validateData(adminSearchMemorySchema),
 	async (req, res) => {
 		try {
 			const { contractId, ...searchData } = req.body;
-			const eizenService = await getAdminEizenService(contractId);
-			const results = await eizenService.searchVectors(searchData);
+			const memoryService = await getAdminMemoryService(contractId);
+			const results = await memoryService.searchMemories(searchData);
 
 			res.json(
-				successResponse(results, `Found ${results.length} similar vectors`),
+				successResponse(results, `Found ${results.length} similar memories`),
 			);
 		} catch (error) {
-			console.error("Admin vector search error:", error);
+			console.error("Admin memory search error:", error);
 			res
 				.status(500)
 				.json(
 					errorResponse(
-						"Failed to search vectors",
-						error instanceof Error ? error.message : "Unknown error",
-					),
-				);
-		}
-	},
-);
-
-/**
- * GET /admin/vector/:id
- * Get a specific vector by its ID
- *
- * Admin Use Case: Direct vector retrieval for debugging and data inspection
- *
- * URL Parameters:
- * - id: Vector ID (integer)
- *
- * Query Parameters:
- * - contractId: Optional contract ID (fallback to env variable)
- *
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "id": 123,
- *     "vector": [0.1, 0.2, 0.3, ...],
- *     "metadata": { ... }
- *   },
- *   "message": "Vector retrieved successfully"
- * }
- */
-router.get(
-	"/vector/:id",
-	async (req: Request, res: Response): Promise<void> => {
-		try {
-			const contractId = req.query.contractId as string;
-			const eizenService = await getAdminEizenService(contractId);
-			const vectorId = Number.parseInt(req.params.id, 10);
-
-			if (Number.isNaN(vectorId)) {
-				res
-					.status(400)
-					.json(
-						errorResponse("Invalid vector ID", "Vector ID must be a number"),
-					);
-				return;
-			}
-
-			const vector = await eizenService.getVector(vectorId);
-
-			if (!vector) {
-				res
-					.status(404)
-					.json(
-						errorResponse(
-							"Vector not found",
-							`No vector found with ID: ${vectorId}`,
-						),
-					);
-				return;
-			}
-
-			res.json(successResponse(vector, "Vector retrieved successfully"));
-		} catch (error) {
-			console.error("Admin vector get error:", error);
-			res
-				.status(500)
-				.json(
-					errorResponse(
-						"Failed to retrieve vector",
+						"Failed to search memories",
 						error instanceof Error ? error.message : "Unknown error",
 					),
 				);
@@ -222,39 +151,53 @@ router.get(
 
 /**
  * GET /admin/
- * Get Admin database statistics and system information
+ * Get Admin memory statistics and system information
  *
- * Admin Use Case: Monitor database health, storage metrics, and performance stats
+ * Admin Use Case: Monitor memory system health, storage metrics, and performance stats
+ * Uses MemoryService to get comprehensive statistics including embedding service status
  *
  * Query Parameters:
- * - contractId: Optional contract ID (fallback to env variable)
+ * - contractId: Required contract ID
  *
  * Response:
  * {
  *   "success": true,
  *   "data": {
- *     "totalVectors": 1234,
+ *     "totalMemories": 1234,
+ *     "embeddingService": "xenova",
  *     "isInitialized": true,
- *     "memoryUsage": "45.2MB",
- *     "lastUpdated": "2025-06-15T10:30:00Z"
+ *     "systemReady": true
  *   },
- *   "message": "Database statistics retrieved"
+ *   "message": "Memory statistics retrieved"
  * }
  */
 router.get("/", async (req, res) => {
 	try {
 		const contractId = req.query.contractId as string;
-		const eizenService = await getAdminEizenService(contractId);
-		const stats = await eizenService.getStats();
 
-		res.json(successResponse(stats, "Database statistics retrieved"));
+		if (!contractId) {
+			res
+				.status(400)
+				.json(
+					errorResponse(
+						"Contract ID is required",
+						"Please provide 'contractId' as a query parameter",
+					),
+				);
+			return;
+		}
+
+		const memoryService = await getAdminMemoryService(contractId);
+		const stats = await memoryService.getStats();
+
+		res.json(successResponse(stats, "Memory statistics retrieved"));
 	} catch (error) {
-		console.error("Admin stats error:", error);
+		console.error("Admin memory stats error:", error);
 		res
 			.status(500)
 			.json(
 				errorResponse(
-					"Failed to get database statistics",
+					"Failed to get memory statistics",
 					error instanceof Error ? error.message : "Unknown error",
 				),
 			);
@@ -294,6 +237,170 @@ router.post("/deploy", async (_req, res) => {
 			.json(
 				errorResponse(
 					"Failed to deploy contract",
+					error instanceof Error ? error.message : "Unknown error",
+				),
+			);
+	}
+});
+
+/**
+ * POST /admin/test-deploy
+ * Test the deploy.ts route functionality (admin testing)
+ *
+ * Admin Use Case: Test the deployForUser function with a provided user ID
+ * This simulates the main deploy route without requiring authentication
+ *
+ * Request body:
+ * {
+ *   "userId": "test_user_123"  // Required user ID to test deployment
+ * }
+ *
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "contractId": "arweave_tx_abc123",
+ *     "contractHashFingerprint": "hash_fingerprint_def456",
+ *     "userId": "test_user_123",
+ *     "deployedAt": "2025-06-27T10:30:00.000Z",
+ *     "keyId": "key_record_id_123"
+ *   },
+ *   "message": "Deploy service test completed successfully"
+ * }
+ */
+router.post("/test-deploy", async (req, res) => {
+	try {
+		const { userId } = req.body;
+
+		if (!userId) {
+			res
+				.status(400)
+				.json(
+					errorResponse(
+						"User ID is required",
+						"Please provide 'userId' in the request body for testing",
+					),
+				);
+			return;
+		}
+
+		// Import the deployForUser function from DeployService
+		const { deployForUser } = await import("../services/DeployService.js");
+
+		// Test the deployment service with the provided user ID
+		const deploymentResult = await deployForUser(userId);
+
+		if (!deploymentResult.success) {
+			res
+				.status(400)
+				.json(
+					errorResponse(
+						"Deployment test failed",
+						deploymentResult.error || "Unknown deployment error",
+					),
+				);
+			return;
+		}
+
+		// Return successful deployment test data
+		res
+			.status(201)
+			.json(
+				successResponse(
+					deploymentResult.data,
+					"Deploy service test completed successfully",
+				),
+			);
+	} catch (error) {
+		console.error("Admin deploy test error:", error);
+		res
+			.status(500)
+			.json(
+				errorResponse(
+					"Failed to test deploy service",
+					error instanceof Error ? error.message : "Unknown error",
+				),
+			);
+	}
+});
+
+/**
+ * GET /admin/test-deploy-status
+ * Test the deploy status checking functionality (admin testing)
+ *
+ * Admin Use Case: Test the getDeploymentStatus function with a provided user ID
+ * This simulates the deploy/status route without requiring authentication
+ *
+ * Query Parameters:
+ * - userId: Required user ID to test deployment status check
+ *
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "hasDeployment": true,
+ *     "contractId": "arweave_tx_abc123",
+ *     "lastUsedAt": "2025-06-27T10:30:00.000Z",
+ *     "isActive": true
+ *   },
+ *   "message": "Deploy status test completed successfully"
+ * }
+ */
+router.get("/test-deploy-status", async (req, res) => {
+	try {
+		const userId = req.query.userId as string;
+
+		if (!userId) {
+			res
+				.status(400)
+				.json(
+					errorResponse(
+						"User ID is required",
+						"Please provide 'userId' as a query parameter for testing",
+					),
+				);
+			return;
+		}
+
+		// Import the getDeploymentStatus function from DeployService
+		const { getDeploymentStatus } = await import(
+			"../services/DeployService.js"
+		);
+
+		// Test the deployment status check with the provided user ID
+		const status = await getDeploymentStatus(userId);
+
+		if (status.hasDeployment && status.keyData) {
+			// User has an existing deployment
+			res.status(200).json(
+				successResponse(
+					{
+						hasDeployment: true,
+						contractId: status.keyData.arweaveWalletAddress,
+						lastUsedAt: status.keyData.lastUsedAt,
+						isActive: status.keyData.isActive,
+					},
+					"Deploy status test completed successfully",
+				),
+			);
+		} else {
+			// User has no deployment
+			res
+				.status(200)
+				.json(
+					successResponse(
+						{ hasDeployment: false },
+						"Deploy status test completed - No deployment found",
+					),
+				);
+		}
+	} catch (error) {
+		console.error("Admin deploy status test error:", error);
+		res
+			.status(500)
+			.json(
+				errorResponse(
+					"Failed to test deploy status service",
 					error instanceof Error ? error.message : "Unknown error",
 				),
 			);
