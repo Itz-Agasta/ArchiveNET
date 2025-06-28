@@ -3,8 +3,10 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/db.js";
 import { keysTable } from "../db/schema/keys.js";
 import { subscriptionsTable } from "../db/schema/subscriptions.js";
+import { usersTable } from "../db/schema/users.js";
 import { generateContractHash } from "../utils/contract.js";
 import { EizenService } from "./EizenService.js";
+import { mailService } from "./mailService.js";
 
 export interface DeploymentResult {
 	success: boolean;
@@ -94,18 +96,20 @@ export async function validateUserKey(
 
 /**
  * Deploys a new Eizen contract to the Arweave blockchain
- * @returns {Promise<{success: boolean, contractId?: string, error?: string}>}
- *          Deployment result with contract ID if successful
+ * @returns {Promise<{success: boolean, contractId?: string, walletAddress?: string, error?: string}>}
+ *          Deployment result with contract ID and wallet address if successful
  */
 export async function deployContract(): Promise<{
 	success: boolean;
 	contractId?: string;
+	walletAddress?: string;
 	error?: string;
 }> {
 	try {
 		// Delegate to EizenService for actual contract deployment
 		const deployResult = await EizenService.deployNewContract();
 		const contractId = deployResult.contractId;
+		const walletAddress = deployResult.walletAddress;
 
 		// Validate that deployment was successful and returned a contract ID
 		if (!contractId) {
@@ -113,7 +117,7 @@ export async function deployContract(): Promise<{
 		}
 
 		console.log(`Contract deployed successfully: ${contractId}`);
-		return { success: true, contractId };
+		return { success: true, contractId, walletAddress };
 	} catch (error) {
 		console.error("Error deploying contract:", error);
 		return { success: false, error: "Contract deployment failed" };
@@ -131,6 +135,7 @@ export async function deployContract(): Promise<{
  *
  * @param {string} contractTxId - Arweave transaction ID of the deployed contract
  * @param {string} userId - Clerk user ID who owns the contract
+ * @param {string} walletAddress - Arweave wallet address used to deploy the contract
  * @returns {Promise<{success: boolean, hashData?: ContractHashData, updatedKey?: UserKey, error?: string}>}
  *          Processing result with hash data and updated key record
  *
@@ -138,6 +143,7 @@ export async function deployContract(): Promise<{
 export async function processContractHash(
 	contractTxId: string,
 	userId: string,
+	walletAddress: string,
 ): Promise<{
 	success: boolean;
 	hashData?: ContractHashData;
@@ -145,6 +151,12 @@ export async function processContractHash(
 	error?: string;
 }> {
 	try {
+		// Debug: Log the values being processed
+		console.log(`DEBUG - Processing contract hash:
+  - contractTxId: ${contractTxId}
+  - userId: ${userId}
+  - walletAddress: ${walletAddress}`);
+
 		// Generate the contract hash using utility function
 		const contractHash = generateContractHash(contractTxId, userId);
 		if (!contractHash) {
@@ -159,7 +171,7 @@ export async function processContractHash(
 			.update(keysTable)
 			.set({
 				instanceKeyHash: hashedContractKey, // Store hashed version for security
-				arweaveWalletAddress: contractTxId, // Store contract transaction ID
+				arweaveWalletAddress: walletAddress, // Store wallet address used for deployment
 				isActive: true, // Activate the key
 			})
 			.where(eq(keysTable.clerkId, userId))
@@ -173,7 +185,9 @@ export async function processContractHash(
 			};
 		}
 
-		console.log(`Updated contract hash for user ${userId}`);
+		console.log(
+			`Updated contract hash for user ${userId}, wallet: ${walletAddress}`,
+		);
 
 		return {
 			success: true,
@@ -245,22 +259,29 @@ export async function deployForUser(userId: string): Promise<DeploymentResult> {
 		const hashProcessing = await processContractHash(
 			deployment.contractId as string,
 			userId,
+			deployment.walletAddress as string,
 		);
 		if (!hashProcessing.success) {
 			return { success: false, error: hashProcessing.error };
 		}
 
-		// Step 5: Return success with comprehensive deployment data
+		// Step 5: Prepare deployment result data
+		const deploymentData = {
+			contractId: deployment.contractId as string,
+			contractHashFingerprint: (hashProcessing.hashData as ContractHashData)
+				.contractHashFingerprint,
+			userId,
+			deployedAt: new Date().toISOString(),
+			keyId: (hashProcessing.updatedKey as UserKey).id,
+		};
+
+		// Step 6: Send email notification (non-blocking)
+		sendDeploymentNotification(userId, deploymentData);
+
+		// Step 7: Return success with comprehensive deployment data
 		return {
 			success: true,
-			data: {
-				contractId: deployment.contractId as string,
-				contractHashFingerprint: (hashProcessing.hashData as ContractHashData)
-					.contractHashFingerprint,
-				userId,
-				deployedAt: new Date().toISOString(),
-				keyId: (hashProcessing.updatedKey as UserKey).id,
-			},
+			data: deploymentData,
 		};
 	} catch (error) {
 		console.error("Deployment service error:", error);
@@ -269,6 +290,41 @@ export async function deployForUser(userId: string): Promise<DeploymentResult> {
 			error:
 				error instanceof Error ? error.message : "Unknown deployment error",
 		};
+	}
+}
+
+/**
+ * Sends deployment success notification email to the user
+ *
+ * @param {string} userId - Clerk user ID
+ * @param {DeploymentResult['data']} deploymentData - Deployment result data
+ * @returns {Promise<void>} Email sending result (non-blocking)
+ */
+async function sendDeploymentNotification(
+	userId: string,
+	deploymentData: DeploymentResult["data"],
+): Promise<void> {
+	try {
+		if (!deploymentData) return;
+
+		// Get user details from database for email notification
+		const user = await db.query.usersTable.findFirst({
+			where: eq(usersTable.clerkId, userId),
+		});
+
+		if (user) {
+			await mailService.sendDeploymentSuccess({
+				userEmail: user.email,
+				userName: user.fullName,
+				sessionKey: deploymentData.contractHashFingerprint,
+				contractId: deploymentData.contractId,
+				deploymentTime: new Date(deploymentData.deployedAt),
+			});
+			console.log(`Deployment notification email sent to ${user.email}`);
+		}
+	} catch (emailError) {
+		// Don't fail the deployment if email sending fails
+		console.error("Failed to send deployment notification email:", emailError);
 	}
 }
 
