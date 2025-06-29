@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { auth } from "../middlewares/auth.js";
 import { validateData } from "../middlewares/validate.js";
 import { createMemorySchema, searchMemorySchema } from "../schemas/memory.js";
 import { EizenService } from "../services/EizenService.js";
@@ -71,6 +72,7 @@ async function getAdminMemoryService(
  */
 router.post(
 	"/insert",
+	auth,
 	validateData(adminCreateMemorySchema),
 	async (req, res) => {
 		try {
@@ -125,6 +127,7 @@ router.post(
  */
 router.post(
 	"/search",
+	auth,
 	validateData(adminSearchMemorySchema),
 	async (req, res) => {
 		try {
@@ -150,39 +153,20 @@ router.post(
 );
 
 /**
- * GET /admin/
- * Get Admin memory statistics and system information
+ * GET /admin/memories/count/:contractId
+ * Check how many memories exist for a specific contract ID
  *
- * Admin Use Case: Monitor memory system health, storage metrics, and performance stats
- * Uses MemoryService to get comprehensive statistics including embedding service status
- *
- * Query Parameters:
- * - contractId: Required contract ID
- *
- * Response:
- * {
- *   "success": true,
- *   "data": {
- *     "totalMemories": 1234,
- *     "embeddingService": "xenova",
- *     "isInitialized": true,
- *     "systemReady": true
- *   },
- *   "message": "Memory statistics retrieved"
- * }
+ * @NOTE contractID is a path parameter not query
  */
-router.get("/", async (req, res) => {
+router.get("/memories/count/:contractId", async (req, res) => {
 	try {
-		const contractId = req.query.contractId as string;
+		const { contractId } = req.params;
 
 		if (!contractId) {
 			res
 				.status(400)
 				.json(
-					errorResponse(
-						"Contract ID is required",
-						"Please provide 'contractId' as a query parameter",
-					),
+					errorResponse("Contract ID required", "Please provide a contract ID"),
 				);
 			return;
 		}
@@ -190,14 +174,23 @@ router.get("/", async (req, res) => {
 		const memoryService = await getAdminMemoryService(contractId);
 		const stats = await memoryService.getStats();
 
-		res.json(successResponse(stats, "Memory statistics retrieved"));
+		res.json(
+			successResponse(
+				{
+					contractId,
+					totalMemories: stats.totalMemories,
+					isInitialized: stats.isInitialized,
+				},
+				`Contract ${contractId} has ${stats.totalMemories} memories`,
+			),
+		);
 	} catch (error) {
-		console.error("Admin memory stats error:", error);
+		console.error("Memory count check error:", error);
 		res
 			.status(500)
 			.json(
 				errorResponse(
-					"Failed to get memory statistics",
+					"Failed to get memory count",
 					error instanceof Error ? error.message : "Unknown error",
 				),
 			);
@@ -346,7 +339,7 @@ router.post("/test-deploy", async (req, res) => {
  *   "message": "Deploy status test completed successfully"
  * }
  */
-router.get("/test-deploy-status", async (req, res) => {
+router.get("/test-deploy-status", auth, async (req, res) => {
 	try {
 		const userId = req.query.userId as string;
 

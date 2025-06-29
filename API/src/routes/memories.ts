@@ -4,6 +4,10 @@ import { validateData } from "../middlewares/validate.js";
 import { createMemorySchema, searchMemorySchema } from "../schemas/memory.js";
 import { EizenService } from "../services/EizenService.js";
 import { MemoryService } from "../services/MemoryService.js";
+import {
+	checkQuota,
+	incrementQuotaUsage,
+} from "../services/SubscriptionService.js";
 import { errorResponse, successResponse } from "../utils/responses.js";
 
 //  User-facing semantic memory API
@@ -58,6 +62,31 @@ router.post(
 	validateData(createMemorySchema),
 	async (req, res) => {
 		try {
+			// Check if user has quota available
+			const clerkId = req.contract?.userId;
+			if (!clerkId) {
+				res
+					.status(401)
+					.json(
+						errorResponse("Authentication failed", "Unable to identify user"),
+					);
+				return;
+			}
+
+			const quotaCheck = await checkQuota(clerkId);
+			if (!quotaCheck.allowed) {
+				res
+					.status(429)
+					.json(
+						errorResponse(
+							"Quota exceeded",
+							quotaCheck.error ||
+								"You have reached your memory insertion limit",
+						),
+					);
+				return;
+			}
+
 			const memoryService = await getUserMemoryService(req);
 			if (!memoryService) {
 				res
@@ -70,7 +99,20 @@ router.post(
 					);
 				return;
 			}
+
+			// Create the memory
 			const result = await memoryService.createMemory(req.body);
+
+			// Update quota usage after successful memory creation
+			const quotaUpdate = await incrementQuotaUsage(clerkId, 1);
+			if (!quotaUpdate.success) {
+				console.error(
+					"Failed to update quota after memory creation:",
+					quotaUpdate.error,
+				);
+				// Note: We don't fail the request since the memory was created successfully
+				// but we log the error for monitoring
+			}
 
 			res
 				.status(201)

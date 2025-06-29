@@ -376,19 +376,13 @@ Command: ${rechargeInfo.instructions}`,
 		try {
 			console.log(`Inserting vector with ${data.vector.length} dimensions`);
 
-			// Get current vector count to estimate the next ID
-			// TODO: implement getVectorCount() with neonDB later
-			const currentVectorCount = await this.getVectorCount();
+			// Get the next ID before insertion from the underlying database
+			const vectorId = await this.vectorDb.db.get_datasize();
 
 			// Insert vector into the HNSW index with associated metadata
 			await this.vectorDb.insert(data.vector, data.metadata);
 
-			// Estimate the vector ID
-			const vectorId = currentVectorCount; //NOTE: getVectorCount() is not implemented yet. so VectorID is 0 for every insert.
-
-			console.log(
-				`Vector inserted successfully with estimated ID: ${vectorId}`,
-			);
+			console.log(`Vector inserted successfully with ID: ${vectorId}`);
 
 			// Check wallet balance after successful insert
 			const arweaveConfig = await EizenService.getSharedArweaveConfig();
@@ -400,8 +394,8 @@ Command: ${rechargeInfo.instructions}`,
 
 			return {
 				success: true,
-				vectorId, // For now it will always return 0
-				message: `Vector inserted successfully with estimated ID: ${vectorId}`,
+				vectorId,
+				message: `Vector inserted successfully with ID: ${vectorId}`,
 			};
 		} catch (error) {
 			console.error("Failed to insert vector:", error);
@@ -574,7 +568,10 @@ Command: ${rechargeInfo.instructions}`,
 	 * @todo Implement it via service NEON db
 	 */
 	private async getVectorCount(): Promise<number> {
-		return 0; // Placeholder value for now
+		if (!this.vectorDb) {
+			return 0;
+		}
+		return await this.vectorDb.db.get_datasize();
 	}
 
 	/**
