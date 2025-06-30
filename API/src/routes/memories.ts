@@ -132,92 +132,9 @@ router.post(
 );
 
 /**
- * GET /memories/search
+ * POST /memories/search
  * Search for memories using natural language query
  * This endpoint converts text query to embeddings and searches Eizen
- *
- * Query parameters:
- * - query: The search text
- * - k: Number of results (optional, default 10)
- * - filters: Optional JSON string with search filters
- */
-router.get(
-	"/search",
-	verifyContractHashMiddleware,
-	async (req: Request, res: Response): Promise<void> => {
-		try {
-			const { query, k, filters } = req.query;
-
-			if (!query || typeof query !== "string") {
-				res
-					.status(400)
-					.json(
-						errorResponse(
-							"Invalid query parameter",
-							"Query parameter is required and must be a string",
-						),
-					);
-				return;
-			}
-
-			// Parse search request
-			const searchRequest = {
-				query,
-				k: k ? Number.parseInt(k as string, 10) : 10,
-				filters: filters ? JSON.parse(filters as string) : undefined,
-			};
-
-			// Validate the search request
-			const validatedRequest = searchMemorySchema.parse(searchRequest);
-
-			const memoryService = await getUserMemoryService(req);
-			if (!memoryService) {
-				res
-					.status(500)
-					.json(
-						errorResponse(
-							"Memory service not available",
-							"Unable to initialize memory service",
-						),
-					);
-				return;
-			}
-			const results = await memoryService.searchMemories(validatedRequest);
-
-			res.json(
-				successResponse(results, `Found ${results.length} relevant memories`),
-			);
-		} catch (error) {
-			console.error("Memory search error:", error);
-
-			if (error instanceof SyntaxError) {
-				res
-					.status(400)
-					.json(
-						errorResponse(
-							"Invalid filters parameter",
-							"Filters must be valid JSON",
-						),
-					);
-				return;
-			}
-
-			res
-				.status(500)
-				.json(
-					errorResponse(
-						"Failed to search memories",
-						error instanceof Error ? error.message : "Unknown error",
-					),
-				);
-		}
-	},
-);
-
-/**
- * POST /memories/search
- * Alternative POST endpoint for memory search with request body
- * Useful for complex search queries
  *
  * Request body:
  * {

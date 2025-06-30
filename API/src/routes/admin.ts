@@ -153,12 +153,12 @@ router.post(
 );
 
 /**
- * GET /admin/memories/count/:contractId
+ * GET /admin/count/:contractId
  * Check how many memories exist for a specific contract ID
  *
  * @NOTE contractID is a path parameter not query
  */
-router.get("/memories/count/:contractId", async (req, res) => {
+router.get("/count/:contractId", auth, async (req, res) => {
 	try {
 		const { contractId } = req.params;
 
@@ -213,7 +213,7 @@ router.get("/memories/count/:contractId", async (req, res) => {
  *   "message": "Eizen contract deployed successfully"
  * }
  */
-router.post("/deploy", async (_req, res) => {
+router.post("/deploy", auth, async (_req, res) => {
 	try {
 		const deployResult = await EizenService.deployNewContract();
 		const contractId = deployResult.contractId;
@@ -237,7 +237,7 @@ router.post("/deploy", async (_req, res) => {
 });
 
 /**
- * POST /admin/test-deploy
+ * POST /admin/full-deploy
  * Test the deploy.ts route functionality (admin testing)
  *
  * Admin Use Case: Test the deployForUser function with a provided user ID
@@ -261,7 +261,7 @@ router.post("/deploy", async (_req, res) => {
  *   "message": "Deploy service test completed successfully"
  * }
  */
-router.post("/test-deploy", async (req, res) => {
+router.post("/full-deploy", auth, async (req, res) => {
 	try {
 		const { userId } = req.body;
 
@@ -318,7 +318,7 @@ router.post("/test-deploy", async (req, res) => {
 });
 
 /**
- * GET /admin/test-deploy-status
+ * GET /admin/full-deploy-status
  * Test the deploy status checking functionality (admin testing)
  *
  * Admin Use Case: Test the getDeploymentStatus function with a provided user ID
@@ -339,7 +339,7 @@ router.post("/test-deploy", async (req, res) => {
  *   "message": "Deploy status test completed successfully"
  * }
  */
-router.get("/test-deploy-status", auth, async (req, res) => {
+router.get("/full-deploy-status", auth, async (req, res) => {
 	try {
 		const userId = req.query.userId as string;
 
